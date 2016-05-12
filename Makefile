@@ -14,7 +14,7 @@ LC3AS=../lc3tools/lc3as;
 CFLAGS=-g -Wall -std=c89
 
 ## Output program name
-PROG_NAME=out
+PROG_NAME=out.out
 
 SRC=$(wildcard *.c)
 OBJ=$(patsubst %.c,%.o,$(wildcard *.c))
