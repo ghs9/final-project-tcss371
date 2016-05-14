@@ -7,7 +7,11 @@
  */
 
 #include "cpu_ir.h"
+#include "opcodes.h"
+#include "util.h"
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 union cpu_ir_t {
   Register ir;
@@ -66,4 +70,70 @@ Register cpu_ir_set_immed7(CPU_IR_p ir, Register val) {
 
 Register cpu_ir_get_immed7(CPU_IR_p ir) {
   return ir->fmt.immed7;
+}
+
+void cpu_ir_dump(CPU_IR_p ir) {
+  printf("IR: " REG_PF " [", ir->ir);
+  int i;
+  for (i = 15; i >= 0; i--) {
+    if (i == 12 || i == 9 || i == 6)
+      printf("|");
+    printf("%d", (ir->ir >> i) & 0x1);
+  }
+  printf("]\n");
+
+  printf("\tOpCode: " REG_PF "\n", ir->fmt.opcode);
+  printf("\tRD: " REG_PF "\n", ir->fmt.rd);
+  printf("\tRS: " REG_PF "\n", ir->fmt.rs);
+  printf("\timmed7: " REG_PF "\n", ir->fmt.immed7);
+}
+
+
+static const struct {
+  const char *name;
+  const Register opcode;
+} instructs[] = {
+  {INSTRUCT_ADD, OPCODE_ADD},
+  {INSTRUCT_ADI, OPCODE_ADI},
+  {INSTRUCT_NAND, OPCODE_NAND},
+  {INSTRUCT_LDI, OPCODE_LDI},
+  {INSTRUCT_LD, OPCODE_LD},
+  {INSTRUCT_ST, OPCODE_ST},
+  {INSTRUCT_BRZ, OPCODE_BRZ},
+  {INSTRUCT_HALT, OPCODE_HALT}};
+
+Register compile_instruction(int argc, char *argv[]) {
+  CPU_IR_p ir = malloc_cpu_ir();
+
+  unsigned int i;
+  for (i = 0; i < sizeof(instructs); i++) {
+    if (strcmp(instructs[i].name, argv[0]) == 0) {
+      ir->fmt.opcode = instructs[i].opcode;
+      break;
+    }
+  }
+
+  if (i == sizeof(instructs)) {
+    printf("Invalid operation\n");
+    return -1;
+  }
+
+  argv ++; argc --;
+  switch (ir->fmt.opcode) {
+  case OPCODE_ADI: case OPCODE_LD: case OPCODE_ST:
+    ir->fmt.immed7 = strx_toi(argv[2]);
+  case OPCODE_ADD: case OPCODE_NAND:
+    ir->fmt.rs = strx_toi(argv[1] + 1);
+    ir->fmt.rd = strx_toi(argv[0] + 1);
+    break;
+  case OPCODE_LDI:
+    ir->fmt.immed7 = strx_toi(argv[1]);
+    ir->fmt.rd = strx_toi(argv[0] + 1);
+    break;
+  case OPCODE_BRZ:
+    ir->fmt.immed7 = strx_toi(argv[0]);
+    break;
+  }
+
+  return ir->ir;
 }

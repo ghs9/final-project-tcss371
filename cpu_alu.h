@@ -20,4 +20,6 @@ Register cpu_alu_set_b(CPU_ALU_p alu);
 Register cpu_alu_get_b(CPU_ALU_p alu);
 Register cpu_alu_get_r(CPU_ALU_p alu);
 
+void cpu_alu_dump(CPU_ALU_p ir);
+
 #endif
