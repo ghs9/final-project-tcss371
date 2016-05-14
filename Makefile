@@ -16,23 +16,44 @@ CFLAGS=-g -Wall -std=c89
 ## Output program name
 PROG_NAME=out.out
 
+# Where dependency files are storied
+DEPDIR := .d
+$(shell mkdir -p $(DEPDIR))
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
+
 SRC=$(wildcard *.c)
-OBJ=$(patsubst %.c,%.o,$(wildcard *.c))
-HEADERS=$(wildcard *.h)
+
+# Where object files are stored
+OBJDIR := .o
+$(shell mkdir -p $(OBJDIR))
+OBJ=$(patsubst %.c,$(OBJDIR)/%.o,$(wildcard *.c))
+
 ASSEMLY=$(wildcard *.asm)
 
-compileAll: $(OBJ) $(HEADERS) $(ASSEMBLY)
+compileAll: $(OBJ) $(ASSEMBLY)
 	$(CC) $(OBJ) -o $(PROG_NAME)
 
-%.o: *.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+$(OBJDIR)/%.o: %.c
+$(OBJDIR)/%.o: %.c $(DEPDIR)/%.d
+	$(CC) $(DEPFLAGS) $(CFLAGS) -c $< -o $@
+	$(POSTCOMPILE)
+
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
 
 clean:
-	rm *.o
+	rm -f *.o *.obj
+	rm -rf $(DEPDIR) $(OBJDIR)
+	rm -f out.out
+	rm -f *.sym
 
 
 and-run: compileAll
 	./$(PROG_NAME)
 
 and-debug: compileAll
-	gdb
+	gdb $(PROG_NAME)
+
+
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
