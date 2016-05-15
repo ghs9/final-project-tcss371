@@ -7,14 +7,16 @@
  */
 
 #include "cpu_all.h"
-
-#define MEM_SIZE 1000
+#include "controller.h"
+#include <string.h>
 
 int main(int argc, char *argv[]) {
-  Memory_s mem;
-  mem.size = MEM_SIZE;
-  mem.mem = calloc(1, MEM_SIZE);
-  CPU_p cpu = malloc_cpu(mem);
-  cpu_dump(cpu);
-  return 0;
+  if (argc > 1) {
+    if (strcmp(argv[1], "-c") == 0) {
+      compile_instruction(argc - 2, argv + 2);
+      return 0;
+    }
+  }
+
+  return controller_main();
 }
