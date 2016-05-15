@@ -11,31 +11,33 @@ CC=gcc
 LC3AS=../lc3tools/lc3as;
 
 ## Compiler options
-CFLAGS=-g -Wall -std=c89
+CFLAGS=-g -Wall -std=c89 -Isrc
 
 ## Output program name
 PROG_NAME=out.out
 
-# Where dependency files are storied
-DEPDIR := .d
+# Where source files are located
+SRCDIR=src
+SRC=$(wildcard $(SRCDIR)/*.c)
+
+# Where object files are stored
+OBJDIR := obj
+$(shell mkdir -p $(OBJDIR))
+OBJ=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRC))
+
+# Where dependency files are stored
+DEPDIR := $(OBJDIR)
 $(shell mkdir -p $(DEPDIR))
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
-
-SRC=$(wildcard *.c)
-
-# Where object files are stored
-OBJDIR := .o
-$(shell mkdir -p $(OBJDIR))
-OBJ=$(patsubst %.c,$(OBJDIR)/%.o,$(wildcard *.c))
 
 ASSEMLY=$(wildcard *.asm)
 
 compileAll: $(OBJ) $(ASSEMBLY)
 	$(CC) $(OBJ) -o $(PROG_NAME)
 
-$(OBJDIR)/%.o: %.c
-$(OBJDIR)/%.o: %.c $(DEPDIR)/%.d
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPDIR)/%.d
 	$(CC) $(DEPFLAGS) $(CFLAGS) -c $< -o $@
 	$(POSTCOMPILE)
 
@@ -43,7 +45,6 @@ $(DEPDIR)/%.d: ;
 .PRECIOUS: $(DEPDIR)/%.d
 
 clean:
-	rm -f *.o *.obj
 	rm -rf $(DEPDIR) $(OBJDIR)
 	rm -f out.out
 	rm -f *.sym
