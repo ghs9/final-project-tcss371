@@ -8,81 +8,23 @@
 
 #include "cpu_ir.h"
 #include "opcodes.h"
+#include "instruction.h"
 #include "util.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-union cpu_ir_t {
-  Register ir;
-  struct /* fmt */ {
-    Bit immed7    : 7;
-    Bit rs        : 3;
-    Bit rd        : 3;
-    Bit opcode    : 3;
-  } fmt;
-};
-
-
-CPU_IR_p malloc_cpu_ir() {
-  return (CPU_IR_p) calloc(1, sizeof(CPU_IR_s));
-}
-
-void free_cpu_ir(CPU_IR_p ir) {
-  free(ir);
-}
-
-Register cpu_ir_set_ir(CPU_IR_p ir, Register val) {
-  return ir->ir = val;
-}
-
-Register cpu_ir_get_ir(CPU_IR_p ir) {
-  return ir->ir;
-}
-
-Register cpu_ir_set_opcode(CPU_IR_p ir, Register val) {
-  return ir->fmt.opcode = val;
-}
-
-Register cpu_ir_get_opcode(CPU_IR_p ir) {
-  return ir->fmt.opcode;
-}
-
-Register cpu_ir_set_rd(CPU_IR_p ir, Register val) {
-  return ir->fmt.rd = val;
-}
-
-Register cpu_ir_get_rd(CPU_IR_p ir) {
-  return ir->fmt.rd;
-}
-
-Register cpu_ir_set_rs(CPU_IR_p ir, Register val) {
-  return ir->fmt.rs = val;
-}
-
-Register cpu_ir_get_rs(CPU_IR_p ir) {
-  return ir->fmt.rs;
-}
-
-Register cpu_ir_set_immed7(CPU_IR_p ir, Register val) {
-  return ir->fmt.immed7 = val;
-}
-
-Register cpu_ir_get_immed7(CPU_IR_p ir) {
-  return ir->fmt.immed7;
-}
-
-void cpu_ir_dump(CPU_IR_p ir) {
-  printf("IR: " REG_PF " [", ir->ir);
-  int i;
-  for (i = 15; i >= 0; i--) {
-    if (i == 12 || i == 9 || i == 6)
+void instruction_dump(Instruction i) {
+  printf("Val: " REG_PF " [", i.val);
+  int j;
+  for (j = 15; j >= 0; j--) {
+    if (j == 12 || j == 9 || j == 6)
       printf("|");
-    printf("%d", (ir->ir >> i) & 0x1);
+    printf("%d", (i.val >> j) & 0x1);
   }
   printf("]\n");
 
-  printf("\tOpCode: " REG_PF "\n", ir->fmt.opcode);
+  printf("\tOpCode: " REG_PF "\n", j->fmt.opcode);
   printf("\tRD: " REG_PF "\n", ir->fmt.rd);
   printf("\tRS: " REG_PF "\n", ir->fmt.rs);
   printf("\timmed7: " REG_PF "\n", ir->fmt.immed7);
@@ -136,4 +78,35 @@ Register compile_instruction(int argc, char *argv[]) {
   }
 
   return ir->ir;
+}
+
+
+int instruct_type(Instruction i) {
+  int t = -1;
+  switch (i.opcode.opcode) {
+  case OPCODE_ADD: case OPCODE_AND:
+    t = i.immed5.flag ? INS_IMMED5 : INS_RS2;
+    break;
+  case OPCODE_BR:
+    t = INS_BR;
+    break;
+  case OPCODE_LD: case OPCODE_LDI: case OPCODE_LEA:
+  case OPCODE_ST: case OPCODE_STI:
+    t = INS_PCOFF9;
+    break;
+  case OPCODE_JMP: case OPCODE_NOT:// case OPCODE_RET:
+    t = INS_IMMED5;
+    break;
+  case OPCODE_JSR:
+    t = INS_PCOFF11;
+    break;
+  case OPCODE_LDR: case OPCODE_STR:
+    t = INS_IMMED6;
+    break;
+  case OPCODE_TRAP:
+    t = INS_VECT8;
+    break;
+  }
+
+  return t;
 }

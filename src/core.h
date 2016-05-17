@@ -8,7 +8,7 @@
 #define REG_PF "0x%04X"
 
 typedef unsigned int Register;
-typedef unsigned char Bit;
+typedef unsigned short Bit;
 
 typedef union cpu_ir_t CPU_IR_s, *CPU_IR_p;
 typedef struct cpu_alu_t CPU_ALU_s, *CPU_ALU_p;
