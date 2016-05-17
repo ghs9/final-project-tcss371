@@ -13,6 +13,26 @@ struct cpu_alu_t {
   Register a, b, r;
 };
 
+void add(CPU_ALU_p alu){
+
+}
+
+int subtract(){
+
+}
+
+int multiply(){
+
+}
+
+int and(){
+
+}
+
+int nand(){
+
+}
+
 CPU_ALU_p malloc_cpu_alu() {
   return calloc(1, sizeof(CPU_ALU_s));
 }
