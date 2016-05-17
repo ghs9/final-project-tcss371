@@ -29,23 +29,26 @@ int controller_main() {
     CPU_p cpu = malloc_cpu();
     cpu_dump(cpu);
 
-    Byte opcode, rd, rs, immed7;
-    Register branch_taken_addr;
+//    Byte opcode, rd, rs, immed7;
+//    Register branch_taken_addr;
+
+    //Temp value, will get changed later.
+    int instruction = 0;
 
     int state = FETCH;
     switch (state) {
     case FETCH:
         //Sets MAR to PC.
-        cpu_set_mar(cpu, cpu_get_pc(cpu));
+//        cpu_set_mar(cpu, cpu_get_pc(cpu));
         //increment PC
-        cpu_set_pc(cpu, cpu_get_pc(cpu)++);
+//        cpu_set_pc(cpu, cpu_get_pc(cpu)++);
 
         //Set IR to equal mem[MAR]
         //cpu->ir = mem[cpu->mar];
-                state
-        = DECODE;
+        state = DECODE;
         break;
     case DECODE:
+
 
         switch (instruction) {
         case INS_IMMED5:
