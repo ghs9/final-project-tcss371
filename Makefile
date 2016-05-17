@@ -11,7 +11,7 @@ CC=gcc
 LC3AS=../lc3tools/lc3as;
 
 ## Compiler options
-CFLAGS=-g -Wall -std=c89 -Isrc
+CFLAGS=-g -Wall -std=c99 -Isrc
 
 ## Output program name
 PROG_NAME=out.out
