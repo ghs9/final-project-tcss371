@@ -8,6 +8,8 @@
 
 #include "util.h"
 #include <ctype.h>
+#include <stdio.h>
+#include <string.h>
 
 unsigned int strx_toi(const char *s) {
     unsigned int r = 0;
@@ -33,4 +35,15 @@ unsigned int strb_toi(const char *s) {
       s++;
     }
     return r;
+}
+
+
+#define REG_PF "0x%04X"
+#define INT_PF "%4d"
+
+void print_hex(const char *name, unsigned int val) {
+  printf("%s:\t", name);
+  if (strlen(name) < 8)
+    printf("\t");
+  printf(REG_PF " (" INT_PF ")\n", val, val);
 }

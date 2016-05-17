@@ -7,6 +7,7 @@
  */
 
 #include "cpu_alu.h"
+#include "util.h"
 
 struct cpu_alu_t {
   Register a, b, r;
@@ -22,7 +23,7 @@ void free_cpu_alu(CPU_ALU_p alu) {
 
 void cpu_alu_dump(CPU_ALU_p alu) {
   printf("ALU: \n");
-  printf("\ta: " REG_PF "\t(%4hd)\n", alu->a, alu->a);
-  printf("\tb: " REG_PF "\t(%4hd)\n", alu->b, alu->b);
-  printf("\tr: " REG_PF "\t(%4hd)\n", alu->r, alu->r);
+  print_hex("a", alu->a);
+  print_hex("b", alu->b);
+  print_hex("r", alu->r);
 }

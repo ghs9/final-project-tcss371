@@ -1,7 +1,7 @@
     ;;                 Does stuff
 	.ORIG   x3000
 	AND     R2,R2,#0
-	LD      R3,PTR
+    LEA     R3,PTR
 	TRAP    x23
 	LDR     R1,R3,#0
     ;;                  test for EOF
@@ -29,6 +29,7 @@ OUTPUT
 ASCII
     .FILL   x0030
 PTR
-    .FILL   x3014
-    .STRINGZ "Testing 123"
+    .STRINGZ "Testing 123 aaa"
+EOT
+    .FILL x0004
     .END

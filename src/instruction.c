@@ -13,52 +13,73 @@
 #include <string.h>
 #include <stdio.h>
 
-void instruction_dump(Instruction i) {
-  printf("Val: " REG_PF " [", i.val);
-  int j;
-  for (j = 15; j >= 0; j--) {
-    if (j == 12 || j == 9 || j == 6)
-      printf("|");
-    printf("%d", (i.val >> j) & 0x1);
-  }
-  printf("]\n");
-  printf("\tOpCode: " REG_PF "\n", i.opcode.opcode);
+#define VAL_NAME_START "IR ["
 
+static void print_opcode_chopped(Instruction i, int locc, int loca[]) {
+  char bin_buf[100];
+  char *bb_c = bin_buf;
+  sprintf(bb_c, VAL_NAME_START);
+  bb_c += strlen(VAL_NAME_START);
+
+  int j, k;
+  for (j = 15; j >= 0; j--) {
+    for (k = 0; k < locc; k++) {
+      if (loca[k] == 15 - j) {
+        sprintf(bb_c, "|");
+        bb_c ++;
+      }
+    }
+    sprintf(bb_c, "%d", (i.val >> j) & 0x1);
+    bb_c ++;
+  }
+  sprintf(bb_c, "]");
+  print_hex(bin_buf, i.val);
+  print_hex("OpCode", i.opcode.opcode);
+}
+
+void instruction_dump(Instruction i) {
   switch (instruction_type(i)) {
   case INS_IMMED5:
-    printf("\tRD: " REG_PF "\n", i.immed5.rd);
-    printf("\tRS: " REG_PF "\n", i.immed5.rs);
-    printf("\tflag: " REG_PF "\n", i.immed5.flag);
-    printf("\timmed5: " REG_PF "\n", i.immed5.immed);
+    print_opcode_chopped(i, 4, (int []) {4, 7, 10, 11});
+    print_hex("RD", i.immed5.rd);
+    print_hex("RS", i.immed5.rs);
+    print_hex("flag", i.immed5.flag);
+    print_hex("immed5", i.immed5.immed);
     break;
   case INS_IMMED6:
-    printf("\tRD: " REG_PF "\n", i.immed6.rd);
-    printf("\tRS: " REG_PF "\n", i.immed6.rs);
-    printf("\timmed6: " REG_PF "\n", i.immed6.immed);
+    print_opcode_chopped(i, 3, (int []) {4, 7, 10});
+    print_hex("RD", i.immed6.rd);
+    print_hex("RS", i.immed6.rs);
+    print_hex("immed6", i.immed6.immed);
     break;
   case INS_RS2:
-    printf("\tRD: " REG_PF "\n", i.rs2.rd);
-    printf("\tRS: " REG_PF "\n", i.rs2.rs);
-    printf("\tpad: " REG_PF "\n", i.rs2.pad);
-    printf("\tRS2: " REG_PF "\n", i.rs2.rs2);
+    print_opcode_chopped(i, 4, (int []) {4, 7, 10, 12});
+    print_hex("RD", i.rs2.rd);
+    print_hex("RS", i.rs2.rs);
+    print_hex("pad", i.rs2.pad);
+    print_hex("RS2", i.rs2.rs2);
     break;
   case INS_BR:
-    printf("\tn: " REG_PF "\n", i.br.n);
-    printf("\tz: " REG_PF "\n", i.br.z);
-    printf("\tp: " REG_PF "\n", i.br.p);
-    printf("\tpcoffset9: " REG_PF "\n", i.br.pcoffset);
+    print_opcode_chopped(i, 4, (int []) {4, 5, 6, 7});
+    print_hex("n", i.br.n);
+    print_hex("z", i.br.z);
+    print_hex("p", i.br.p);
+    print_hex("pcoffset9", i.br.pcoffset);
     break;
   case INS_PCOFF9:
-    printf("\tr: " REG_PF "\n", i.pcoff9.r);
-    printf("\tpcoffset9: " REG_PF "\n", i.pcoff9.pcoffset);
+    print_opcode_chopped(i, 2, (int []) {4, 7});
+    print_hex("r", i.pcoff9.r);
+    print_hex("pcoffset9", i.pcoff9.pcoffset);
     break;
   case INS_PCOFF11:
-    printf("\tflag: " REG_PF "\n", i.pcoff11.flag);
-    printf("\tpcoffset11: " REG_PF "\n", i.pcoff11.pcoffset);
+    print_opcode_chopped(i, 2, (int []) {4, 5});
+    print_hex("flag", i.pcoff11.flag);
+    print_hex("pcoffset11", i.pcoff11.pcoffset);
     break;
   case INS_VECT8:
-    printf("\tr: " REG_PF "\n", i.vect8.r);
-    printf("\tvect8: " REG_PF "\n", i.vect8.vect);
+    print_opcode_chopped(i, 2, (int []) {4, 8});
+    print_hex("r", i.vect8.r);
+    print_hex("vect8", i.vect8.vect);
     break;
   }
 }

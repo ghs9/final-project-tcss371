@@ -9,6 +9,7 @@
 #include "cpu.h"
 #include "instruction.h"
 #include "cpu_alu.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -111,19 +112,22 @@ void cpu_dump(CPU_p cpu) {
   printf("reg_file: \n");
   int i;
   for (i = 0; i < NO_OF_REGISTERS; i++) {
-    printf("\t%2d) " REG_PF "\t(%4hd)\n", i,
-           cpu->reg_file[i], cpu->reg_file[i]);
+    printf("%2d)", i);
+    print_hex("", cpu->reg_file[i]);
   }
 
+  printf("\n");
   instruction_dump(cpu->ir);
+  printf("\n");
 
-  printf("SEXT:\t" REG_PF " (%4hd)\n", cpu->sext, cpu->sext);
-  printf("PC:\t" REG_PF " (%4hd)\n", cpu->pc, cpu->pc);
-  printf("SW:\t" REG_PF " (%4hd)\n", cpu->sw, cpu->sw);
-  printf("MDR (%1d):\t" REG_PF " (%4hd)\n", cpu->is_mdr_on,
-         cpu->mdr, cpu->mdr);
-  printf("MAR:\t" REG_PF " (%4hd)\n", cpu->mar, cpu->mar);
+  print_hex("SEXT", cpu->sext);
+  print_hex("PC", cpu->pc);
+  print_hex("SW", cpu->sw);
+  print_hex("MDR is on", cpu->is_mdr_on);
+  print_hex("MDR", cpu->mdr);
+  print_hex("MAR", cpu->mar);
 
+  printf("\n");
   cpu_alu_dump(cpu->alu);
 
   printf("--------END OF CPU DUMP-------\n");

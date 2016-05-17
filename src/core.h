@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define REG_PF "0x%04X"
-
 typedef unsigned int Register;
 typedef unsigned short Bit;
 
