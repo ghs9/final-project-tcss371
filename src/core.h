@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef unsigned int Register;
+typedef unsigned short Register;
 typedef unsigned short Bit;
+typedef unsigned short Byte;
 
 typedef union instruction_t Instruction, *Instruction_p;
 typedef struct cpu_alu_t CPU_ALU_s, *CPU_ALU_p;
