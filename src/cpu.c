@@ -7,7 +7,7 @@
  */
 
 #include "cpu.h"
-#include "cpu_ir.h"
+#include "instruction.h"
 #include "cpu_alu.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +21,7 @@ struct cpu_t {
   Register pc, sw; /* PC and SW (Status Word) */
   Register sext; /* sext */
   CPU_ALU_p alu; /* alu */
-  CPU_IR_p ir;   /* IR */
+  Instruction ir;   /* IR */
   Register mar, mdr;
   Bit is_mdr_on;
 };
@@ -30,11 +30,11 @@ struct cpu_t {
 CPU_p malloc_cpu() {
   CPU_p cpu = calloc(1, sizeof(CPU_s));
   cpu->alu = malloc_cpu_alu();
-  cpu->ir = malloc_cpu_ir();
   return cpu;
 }
 
 void free_cpu(CPU_p cpu) {
+  free_cpu_alu(cpu->alu);
   free(cpu);
 }
 
@@ -42,7 +42,11 @@ CPU_ALU_p cpu_get_alu(CPU_p cpu) {
   return cpu->alu;
 }
 
-CPU_IR_p cpu_get_ir(CPU_p cpu) {
+Instruction cpu_set_ir(CPU_p cpu, Instruction i) {
+  return cpu->ir = i;
+}
+
+Instruction cpu_get_ir(CPU_p cpu) {
   return cpu->ir;
 }
 
@@ -111,7 +115,7 @@ void cpu_dump(CPU_p cpu) {
            cpu->reg_file[i], cpu->reg_file[i]);
   }
 
-  cpu_ir_dump(cpu->ir);
+  instruction_dump(cpu->ir);
 
   printf("SEXT:\t" REG_PF " (%4hd)\n", cpu->sext, cpu->sext);
   printf("PC:\t" REG_PF " (%4hd)\n", cpu->pc, cpu->pc);
@@ -121,8 +125,6 @@ void cpu_dump(CPU_p cpu) {
   printf("MAR:\t" REG_PF " (%4hd)\n", cpu->mar, cpu->mar);
 
   cpu_alu_dump(cpu->alu);
-
-  /* printf("State:\t0x%hx (%4hd)\n", cpu->state, cpu->state);*/
 
   printf("--------END OF CPU DUMP-------\n");
 }

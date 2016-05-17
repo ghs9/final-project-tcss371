@@ -19,7 +19,7 @@
 #define OPCODE_LDR    0x6     /* 0 1 1 0 */
 #define OPCODE_LEA    0xE     /* 1 1 1 0 */
 #define OPCODE_NOT    0x9     /* 1 0 0 1 */
-//#define OPCODE_RET    0xC     /* 1 1 0 0 */
+/*#define OPCODE_RET    0xC      1 1 0 0 */
 #define OPCODE_ST     0x3     /* 0 0 1 1 */
 #define OPCODE_STI    0xB     /* 1 0 1 1 */
 #define OPCODE_TRAP   0xF     /* 1 1 1 1 */

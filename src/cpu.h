@@ -15,7 +15,9 @@ CPU_p malloc_cpu();
 void free_cpu(CPU_p cpu);
 
 CPU_ALU_p cpu_get_alu(CPU_p cpu);
-CPU_IR_p cpu_get_ir(CPU_p cpu);
+
+Instruction cpu_set_ir(CPU_p cpu, Instruction i);
+Instruction cpu_get_ir(CPU_p cpu);
 
 Register cpu_set_mdr(CPU_p cpu, Register val);
 Register cpu_get_mdr(CPU_p cpu);

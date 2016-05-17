@@ -20,7 +20,7 @@
 #define EXECUTE     4
 #define STORE       5
 
-#define OPC cpu_ir_get_opcode(cpu_get_ir(cpu))
+#define OPC cpu_get_ir(cpu).opcode.opcode
 
 int controller_main() {
   Memory_s mem;

@@ -61,6 +61,9 @@ typedef union instruction_t {
   } vect8;
 } Instruction, *Instruction_p;
 
-int instruct_type(Instruction i);
+int instruction_type(Instruction i);
+void instruction_dump(Instruction i);
+Register compile_instruction(int argc, char *argv[]);
+
 
 #endif

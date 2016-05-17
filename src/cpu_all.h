@@ -8,4 +8,4 @@
 
 #include "cpu.h"
 #include "cpu_alu.h"
-#include "cpu_ir.h"
+#include "instruction.h"
