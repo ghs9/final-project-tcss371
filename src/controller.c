@@ -9,6 +9,8 @@
 #include "cpu_all.h"
 #include "controller.h"
 #include "opcodes.h"
+#include <signal.h>
+
 
 #define MEM_SIZE 1000
 
@@ -21,6 +23,8 @@
 #define STORE       5
 
 #define OPC cpu_get_ir(cpu).opcode.opcode
+
+static int IS_RUNNING = 1;
 
 int controller_main() {
     Memory_s mem;
@@ -230,4 +234,14 @@ int controller_main() {
     cpu_dump(cpu);
 
     return 0;
+}
+
+void controller_signal(int v) {
+    printf("Paused CPU\nContinue? (y/n): ");
+    char c;
+    scanf(" %c", &c);
+    if (c == 'n')
+        IS_RUNNING = false;
+    else
+        IS_RUNNING = true;
 }

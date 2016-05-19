@@ -115,21 +115,24 @@ Register compile_instruction(int argc, char *argv[]) {
   }
 
   argv ++; argc --;
-  /* switch (ir->fmt.opcode) { */
-  /* case OPCODE_ADI: case OPCODE_LD: case OPCODE_ST: */
-  /*   ir->fmt.immed7 = strx_toi(argv[2]); */
-  /* case OPCODE_ADD: case OPCODE_NAND: */
-  /*   ir->fmt.rs = strx_toi(argv[1] + 1); */
-  /*   ir->fmt.rd = strx_toi(argv[0] + 1); */
-  /*   break; */
-  /* case OPCODE_LDI: */
-  /*   ir->fmt.immed7 = strx_toi(argv[1]); */
-  /*   ir->fmt.rd = strx_toi(argv[0] + 1); */
-  /*   break; */
-  /* case OPCODE_BRZ: */
-  /*   ir->fmt.immed7 = strx_toi(argv[0]); */
-  /*   break; */
-  /* } */
+  switch (i.opcode.opcode) {
+  case OPCODE_LD: case OPCODE_LDI: case OPCODE_LEA:
+  case OPCODE_ST: case OPCODE_STI:
+    i.pcoff9.r = strx_toi(argv[0] + 1);
+    i.pcoff9.pcoffset = strx_toi(argv[1]);
+    break;
+  case OPCODE_ADD: case OPCODE_AND:
+    i.immed5.rd = strx_toi(argv[0] + 1);
+    i.immed5.rs = strx_toi(argv[1] + 1);
+    if (argc >= 3) {
+      if (strx_toi(argv[2])) {
+        i.immed5.immed = strx_toi(argv[3]);
+      } else {
+        i.rs2.rs2 = strx_toi(argv[3] + 1);
+      }
+    }
+    break;
+  }
 
   return i.val;
 }
