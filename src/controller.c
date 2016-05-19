@@ -225,6 +225,7 @@ int controller_main() {
             break;
         }                // end switch
         cpu_dump(cpu);
+        break;
     }                // end loop
     return 0;
 }
