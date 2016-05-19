@@ -32,11 +32,6 @@ int controller_main() {
     mem.mem = calloc(1, MEM_SIZE);
     CPU_p cpu = malloc_cpu();
 
-    Byte opcode;
-    Byte rd, sr1, sr2;
-    Byte immed5, immed6;
-    Byte PCoffset9, PCoffset11;
-    Byte vect8;
     Register branch_taken_addr;
 
     //Temp value, will get changed later.
@@ -45,194 +40,197 @@ int controller_main() {
     i.val = 0x1163;
 
     int state = FETCH;
-    switch (state) {
-    case FETCH:
-        //Sets MAR to PC.
-        cpu_set_mar(cpu, cpu_get_pc(cpu));
-        //increment PC
-        int pc = cpu_get_pc(cpu);
-        cpu_set_pc(cpu, pc++);
+    for (;;) {   // efficient endless loop
 
-        //Set IR to equal mem[MAR]
+        switch (state) {
+        case FETCH:
+            //Sets MAR to PC.
+            cpu_set_mar(cpu, cpu_get_pc(cpu));
+            //increment PC
+            int pc = cpu_get_pc(cpu);
+            cpu_set_pc(cpu, pc++);
 
-        cpu_set_ir(cpu, i);
-        //cpu_set_ir(cpu, (Instruction) {.val = 0x1153});
+            //Set IR to equal mem[MAR]
 
-        state = DECODE;
+            cpu_set_ir(cpu, i);
+            //cpu_set_ir(cpu, (Instruction) {.val = 0x1153});
+
+            state = DECODE;
+            break;
+        case DECODE:
+
+            switch (instruction) {
+            case INS_IMMED5:
+                //Set SEXT for immed5
+                cpu_set_sext(cpu, i.immed5.immed);
+
+                break;
+            case INS_IMMED6:
+                //Set SEXT for immed6
+                cpu_set_sext(cpu, i.immed6.immed);
+
+                break;
+            case INS_RS2:
+                //        opcode = cpu_get_ir(cpu);
+                //        rd = getRd(cpu);
+                //        sr1 = getRs(cpu);
+                //        sr2
+
+                break;
+            case INS_BR:
+                //        opcode = cpu_get_ir(cpu);
+                //        PCoffset9 =
+
+                break;
+            case INS_PCOFF9:
+                //        opcode = cpu_get_ir(cpu);
+                //        rd = getRd(cpu);
+                //        PCoffset9 =
+
+                break;
+            case INS_PCOFF11:
+                //        opcode = cpu_get_ir(cpu);
+                //         PCoffset11 =
+
+                break;
+            case INS_VECT8:
+                //        opcode = cpu_get_ir(cpu);
+                //         vect8
+
+                break;
+            }
+
+            state = EVAL_ADDR;
+            break;
+        case EVAL_ADDR:
+
+            // compute effective address, e.g. add sext(immed7) to register
+            switch (OPC) {
+
+            case OPCODE_ADD: // addresses of dest and src registers already available
+            case OPCODE_AND: // addresses of dest and src registers already available
+                break;
+            case OPCODE_BR:
+                break;
+            case OPCODE_JMP:
+            case OPCODE_JSR:
+            case OPCODE_LD:
+                //cpu->mar = cpu->reg_file[rs] + cpu->sext;   // compute effective address
+                break;
+            case OPCODE_LDI:   // addresses of dest register already available
+                break;
+            case OPCODE_LDR:
+            case OPCODE_LEA:
+            case OPCODE_NOT:
+                break;
+            case OPCODE_ST:
+                //cpu->mar = cpu->reg_file[rd] + cpu->sext; // compute effective address
+                break;
+            case OPCODE_STI:
+            case OPCODE_TRAP:
+            case OPCODE_STR:
+                break;
+            }
+
+            state = FETCH_OP;
+            break;
+        case FETCH_OP:
+
+            // get operands out of registers into A, B of ALU
+            // or get memory for load instr.
+            switch (OPC) {
+            case OPCODE_ADD:
+                //pu->alu->a = cpu->reg_file[rd]; // get first operand
+                //cpu->alu->b = cpu->reg_file[rs];    // get second operand
+                break;
+            case OPCODE_AND:
+                break;
+            case OPCODE_BR:
+                break;
+            case OPCODE_JMP:
+                break;
+            case OPCODE_JSR:
+                break;
+            case OPCODE_LD:
+                //cpu->mdr = mem[cpu->mdr];
+                break;
+            case OPCODE_LDI:
+                //cpu->mdr = cpu->sext;
+                break;
+            case OPCODE_LDR:
+            case OPCODE_LEA:
+            case OPCODE_NOT:
+                break;
+            case OPCODE_ST:
+                //cpu->mdr = cpu->reg_file[rs];
+                break;
+            case OPCODE_STI:
+            case OPCODE_TRAP:
+            case OPCODE_STR:
+                break;
+            }
+
+            state = EXECUTE;
+            break;
+        case EXECUTE:
+            switch (OPC) {
+            case OPCODE_ADD:
+                //alu add(), store result in alu_r
+                break;
+            case OPCODE_AND:
+                //alu and(), store result in alu_r
+                break;
+            case OPCODE_BR:
+                break;
+            case OPCODE_JMP:
+            case OPCODE_JSR:
+            case OPCODE_LD:
+            case OPCODE_LDI:
+            case OPCODE_LDR:
+            case OPCODE_LEA:
+                break;
+            case OPCODE_NOT:
+                //alu not(), store result in alu_r
+                break;
+            case OPCODE_ST:
+            case OPCODE_STI:
+            case OPCODE_TRAP:
+            case OPCODE_STR:
+                break;
+            }
+            state = STORE;
+            break;
+        case STORE:
+            if (!cpu_is_mdr_on(cpu)) {
+                break;
+            }
+
+            switch (OPC) {
+            case OPCODE_ADD:
+                break;
+            case OPCODE_AND:
+                break;
+            case OPCODE_BR:
+                break;
+            case OPCODE_JMP:
+            case OPCODE_JSR:
+            case OPCODE_LD:
+            case OPCODE_LDI:
+            case OPCODE_LDR:
+            case OPCODE_LEA:
+            case OPCODE_NOT:
+            case OPCODE_ST:
+            case OPCODE_STI:
+            case OPCODE_TRAP:
+            case OPCODE_STR:
+                break;
+            }
+
+            break;
+        }                // end switch
+        cpu_dump(cpu);
         break;
-    case DECODE:
-
-        switch (instruction) {
-        case INS_IMMED5:
-            //Set SEXT for immed5
-            cpu_set_sext(cpu, i.immed5.immed);
-
-            break;
-        case INS_IMMED6:
-            //Set SEXT for immed6
-            cpu_set_sext(cpu, i.immed6.immed);
-
-            break;
-        case INS_RS2:
-            //        opcode = cpu_get_ir(cpu);
-            //        rd = getRd(cpu);
-            //        sr1 = getRs(cpu);
-            //        sr2
-
-            break;
-        case INS_BR:
-            //        opcode = cpu_get_ir(cpu);
-            //        PCoffset9 =
-
-            break;
-        case INS_PCOFF9:
-            //        opcode = cpu_get_ir(cpu);
-            //        rd = getRd(cpu);
-            //        PCoffset9 =
-
-            break;
-        case INS_PCOFF11:
-            //        opcode = cpu_get_ir(cpu);
-            //         PCoffset11 =
-
-            break;
-        case INS_VECT8:
-            //        opcode = cpu_get_ir(cpu);
-            //         vect8
-
-            break;
-        }
-
-        state = EVAL_ADDR;
-        break;
-    case EVAL_ADDR:
-
-        // compute effective address, e.g. add sext(immed7) to register
-        switch (OPC) {
-
-        case OPCODE_ADD: // addresses of dest and src registers already available
-        case OPCODE_AND: // addresses of dest and src registers already available
-            break;
-        case OPCODE_BR:
-            break;
-        case OPCODE_JMP:
-        case OPCODE_JSR:
-        case OPCODE_LD:
-            //cpu->mar = cpu->reg_file[rs] + cpu->sext;   // compute effective address
-            break;
-        case OPCODE_LDI:   // addresses of dest register already available
-            break;
-        case OPCODE_LDR:
-        case OPCODE_LEA:
-        case OPCODE_NOT:
-            break;
-        case OPCODE_ST:
-            //cpu->mar = cpu->reg_file[rd] + cpu->sext; // compute effective address
-            break;
-        case OPCODE_STI:
-        case OPCODE_TRAP:
-        case OPCODE_STR:
-            break;
-        }
-
-        state = FETCH_OP;
-        break;
-    case FETCH_OP:
-
-        // get operands out of registers into A, B of ALU
-        // or get memory for load instr.
-        switch (OPC) {
-        case OPCODE_ADD:
-            //pu->alu->a = cpu->reg_file[rd]; // get first operand
-            //cpu->alu->b = cpu->reg_file[rs];    // get second operand
-            break;
-        case OPCODE_AND:
-            break;
-        case OPCODE_BR:
-            break;
-        case OPCODE_JMP:
-            break;
-        case OPCODE_JSR:
-            break;
-        case OPCODE_LD:
-            //cpu->mdr = mem[cpu->mdr];
-            break;
-        case OPCODE_LDI:
-            //cpu->mdr = cpu->sext;
-            break;
-        case OPCODE_LDR:
-        case OPCODE_LEA:
-        case OPCODE_NOT:
-            break;
-        case OPCODE_ST:
-            //cpu->mdr = cpu->reg_file[rs];
-            break;
-        case OPCODE_STI:
-        case OPCODE_TRAP:
-        case OPCODE_STR:
-            break;
-        }
-
-        state = EXECUTE;
-        break;
-    case EXECUTE:
-        switch (OPC) {
-        case OPCODE_ADD:
-            //alu add(), store result in alu_r
-            break;
-        case OPCODE_AND:
-            //alu and(), store result in alu_r
-            break;
-        case OPCODE_BR:
-            break;
-        case OPCODE_JMP:
-        case OPCODE_JSR:
-        case OPCODE_LD:
-        case OPCODE_LDI:
-        case OPCODE_LDR:
-        case OPCODE_LEA:
-            break;
-        case OPCODE_NOT:
-            //alu not(), store result in alu_r
-            break;
-        case OPCODE_ST:
-        case OPCODE_STI:
-        case OPCODE_TRAP:
-        case OPCODE_STR:
-            break;
-        }
-        state = STORE;
-        break;
-    case STORE:
-        if (!cpu_is_mdr_on(cpu)) {
-            break;
-        }
-
-        switch (OPC) {
-        case OPCODE_ADD:
-            break;
-        case OPCODE_AND:
-            break;
-        case OPCODE_BR:
-            break;
-        case OPCODE_JMP:
-        case OPCODE_JSR:
-        case OPCODE_LD:
-        case OPCODE_LDI:
-        case OPCODE_LDR:
-        case OPCODE_LEA:
-        case OPCODE_NOT:
-        case OPCODE_ST:
-        case OPCODE_STI:
-        case OPCODE_TRAP:
-        case OPCODE_STR:
-            break;
-        }
-
-        break;
-    }
-    cpu_dump(cpu);
-
+    }                // end loop
     return 0;
 }
 
