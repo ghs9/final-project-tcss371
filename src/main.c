@@ -12,12 +12,8 @@
 #include <string.h>
 #include <signal.h>
 
-void signal_callback_handler(int signum) {
-  controller_signal(signum);
-}
-
 int main(int argc, char *argv[]) {
-  signal(SIGINT, signal_callback_handler);
+  signal(SIGINT, controller_signal);
   if (argc > 1) {
     if (strcmp(argv[1], "-ch") == 0) {
       printf("%x\n", compile_instruction(argc - 2, argv + 2));

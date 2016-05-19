@@ -28,6 +28,11 @@ static int IS_RUNNING = 1;
 static CPU_p cpu;
 static Memory_s mem;
 
+
+void mem_dump(Memory_p memptr) {
+    printf("aaaaa\n");
+}
+
 int controller_main() {
     mem.size = MEM_SIZE;
     mem.mem = calloc(1, MEM_SIZE);
@@ -42,6 +47,22 @@ int controller_main() {
 
     int state = FETCH;
     for (; IS_RUNNING;) {   // efficient endless loop
+        if (IS_RUNNING == 2) {
+            printf("\n--- Paused CPU ---\n");
+            printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
+            char c = getchar();
+            if (c == 'q')
+                IS_RUNNING = 0;
+            else if (c == 'c') {
+                cpu_dump(cpu);
+            } else if (c == 'm') {
+                mem_dump(&mem);
+            } else if (c == 'p') {
+                mem_dump(&mem);
+                cpu_dump(cpu);
+            }
+            IS_RUNNING = 1;
+        }
 
         switch (state) {
         case FETCH:
@@ -222,27 +243,10 @@ int controller_main() {
             state = FETCH;
             break;
         }                // end switch
-        cpu_dump(cpu);
     }                // end loop
     return 0;
 }
 
-void mem_dump(Memory_p memptr) {
-    printf("aaaaa\n");
-}
-
 void controller_signal(int v) {
-    printf("\n--- Paused CPU ---\n");
-    printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
-    char c = getchar();
-    if (c == 'q')
-        IS_RUNNING = 0;
-    else if (c == 'c') {
-        cpu_dump(cpu);
-    } else if (c == 'm') {
-        mem_dump(&mem);
-    } else if (c == 'p') {
-        mem_dump(&mem);
-        cpu_dump(cpu);
-    }
+    IS_RUNNING = 2;
 }
