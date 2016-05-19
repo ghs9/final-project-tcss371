@@ -41,18 +41,17 @@ int controller_main() {
     i.val = 0x1163;
 
     int state = FETCH;
-    for (;;) {   // efficient endless loop
+    for (; IS_RUNNING;) {   // efficient endless loop
 
         switch (state) {
         case FETCH:
             //Sets MAR to PC.
             cpu_set_mar(cpu, cpu_get_pc(cpu));
             //increment PC
-            int pc = cpu_get_pc(cpu);
-            cpu_set_pc(cpu, pc++);
+            cpu_set_pc(cpu, cpu_get_pc(cpu) + 1);
 
             //Set IR to equal mem[MAR]
-
+            //temp Instruction value, i, used
             cpu_set_ir(cpu, i);
             //cpu_set_ir(cpu, (Instruction) {.val = 0x1153});
 
@@ -72,32 +71,25 @@ int controller_main() {
 
                 break;
             case INS_RS2:
-                //        opcode = cpu_get_ir(cpu);
-                //        rd = getRd(cpu);
-                //        sr1 = getRs(cpu);
-                //        sr2
-
+                //No SEXT for RS
                 break;
             case INS_BR:
-                //        opcode = cpu_get_ir(cpu);
-                //        PCoffset9 =
+                //Set SEXT for PCoffset9 in br
+                cpu_set_sext(cpu, i.br.pcoffset);
 
                 break;
             case INS_PCOFF9:
-                //        opcode = cpu_get_ir(cpu);
-                //        rd = getRd(cpu);
-                //        PCoffset9 =
+                //Set SEXT for PCoffset9
+                cpu_set_sext(cpu, i.pcoff9.pcoffset);
 
                 break;
             case INS_PCOFF11:
-                //        opcode = cpu_get_ir(cpu);
-                //         PCoffset11 =
+                //Set SEXT for PCoffset11
+                cpu_set_sext(cpu, i.pcoff11.pcoffset);
 
                 break;
             case INS_VECT8:
-                //        opcode = cpu_get_ir(cpu);
-                //         vect8
-
+                //Set ZEXT (Zero Extension) using the VECT8
                 break;
             }
 
@@ -227,6 +219,7 @@ int controller_main() {
                 break;
             }
 
+            state = FETCH;
             break;
         }                // end switch
         cpu_dump(cpu);
