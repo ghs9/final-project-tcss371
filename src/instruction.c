@@ -90,26 +90,31 @@ static const struct {
   const Register opcode;
 } instructs[] = {
   {INSTRUCT_ADD, OPCODE_ADD},
-  /* {INSTRUCT_ADI, OPCODE_ADI}, */
-  /* {INSTRUCT_NAND, OPCODE_NAND}, */
-  {INSTRUCT_LDI, OPCODE_LDI},
+  {INSTRUCT_AND, OPCODE_AND},
+  {INSTRUCT_BR, OPCODE_BR},
+  {INSTRUCT_JMP, OPCODE_JMP},
+  {INSTRUCT_JSR, OPCODE_JSR},
   {INSTRUCT_LD, OPCODE_LD},
-  {INSTRUCT_ST, OPCODE_ST}
-  /* {INSTRUCT_BRZ, OPCODE_BRZ}, */
-  /* {INSTRUCT_HALT, OPCODE_HALT} */};
+  {INSTRUCT_LDR, OPCODE_LDR},
+  {INSTRUCT_LEA, OPCODE_LEA},
+  {INSTRUCT_NOT, OPCODE_NOT},
+  {INSTRUCT_ST, OPCODE_ST},
+  {INSTRUCT_STI, OPCODE_STI},
+  {INSTRUCT_STR, OPCODE_STR},
+  {INSTRUCT_TRAP, OPCODE_TRAP},};
 
 Register compile_instruction(int argc, char *argv[]) {
   Instruction i;
 
   unsigned int j;
-  for (j = 0; j < sizeof(instructs); j++) {
+  for (j = 0; j < sizeof(instructs) / sizeof(*instructs); j++) {
     if (strcmp(instructs[j].name, argv[0]) == 0) {
       i.opcode.opcode = instructs[j].opcode;
       break;
     }
   }
 
-  if (j == sizeof(instructs)) {
+  if (j >= sizeof(instructs) / sizeof(*instructs)) {
     printf("Invalid operation\n");
     return -1;
   }
