@@ -239,7 +239,7 @@ void controller_signal(int v) {
     char c;
     scanf(" %c", &c);
     if (c == 'n')
-        IS_RUNNING = false;
+        IS_RUNNING = 0;
     else
-        IS_RUNNING = true;
+        IS_RUNNING = 1;
 }
