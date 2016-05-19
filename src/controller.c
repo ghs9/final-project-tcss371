@@ -25,12 +25,13 @@
 #define OPC cpu_get_ir(cpu).opcode.opcode
 
 static int IS_RUNNING = 1;
+static CPU_p cpu;
+static Memory_s mem;
 
 int controller_main() {
-    Memory_s mem;
     mem.size = MEM_SIZE;
     mem.mem = calloc(1, MEM_SIZE);
-    CPU_p cpu = malloc_cpu();
+    cpu = malloc_cpu();
 
     Register branch_taken_addr;
 
@@ -229,17 +230,27 @@ int controller_main() {
             break;
         }                // end switch
         cpu_dump(cpu);
-        break;
     }                // end loop
     return 0;
 }
 
+void mem_dump(Memory_p memptr) {
+    printf("aaaaa\n");
+}
+
 void controller_signal(int v) {
-    printf("Paused CPU\nContinue? (y/n): ");
+    printf("\n--- Paused CPU ---\n");
+    printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
     char c;
     scanf(" %c", &c);
-    if (c == 'n')
+    if (c == 'q')
         IS_RUNNING = 0;
-    else
-        IS_RUNNING = 1;
+    else if (c == 'c') {
+        cpu_dump(cpu);
+    } else if (c == 'm') {
+        mem_dump(&mem);
+    } else if (c == 'p') {
+        mem_dump(&mem);
+        cpu_dump(cpu);
+    }
 }
