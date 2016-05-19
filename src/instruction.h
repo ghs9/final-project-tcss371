@@ -32,12 +32,12 @@ typedef union instruction_t {
     Bit rd        : 3;
     Bit opcode    : 4;
   } immed5;
-  struct /* fmt_immed6 */ {
-    Bit immed     : 6;
+  struct /* fmt_offset6 */ {
+    Bit offset    : 6;
     Bit rs        : 3;
     Bit rd        : 3;
     Bit opcode    : 4;
-  } immed6;
+  } offset6;
   struct /* fmt_rs2 */ {
     Bit rs2       : 3;
     Bit pad       : 2;

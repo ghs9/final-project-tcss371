@@ -68,7 +68,7 @@ int controller_main() {
                 break;
             case INS_IMMED6:
                 //Set SEXT for immed6
-                cpu_set_sext(cpu, i.immed6.immed);
+                cpu_set_sext(cpu, i.offset6.offset);
 
                 break;
             case INS_RS2:
@@ -241,8 +241,7 @@ void mem_dump(Memory_p memptr) {
 void controller_signal(int v) {
     printf("\n--- Paused CPU ---\n");
     printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
-    char c;
-    scanf(" %c", &c);
+    char c = getchar();
     if (c == 'q')
         IS_RUNNING = 0;
     else if (c == 'c') {

@@ -48,9 +48,9 @@ void instruction_dump(Instruction i) {
     break;
   case INS_IMMED6:
     print_opcode_chopped(i, 3, (int []) {4, 7, 10});
-    print_hex("RD", i.immed6.rd);
-    print_hex("RS", i.immed6.rs);
-    print_hex("immed6", i.immed6.immed);
+    print_hex("RD", i.offset6.rd);
+    print_hex("RS", i.offset6.rs);
+    print_hex("immed6", i.offset6.offset);
     break;
   case INS_RS2:
     print_opcode_chopped(i, 4, (int []) {4, 7, 10, 12});
@@ -121,16 +121,37 @@ Register compile_instruction(int argc, char *argv[]) {
     i.pcoff9.r = strx_toi(argv[0] + 1);
     i.pcoff9.pcoffset = strx_toi(argv[1]);
     break;
+  case OPCODE_LDR: case OPCODE_STR:
+    i.offset6.rd = strx_toi(argv[0] + 1);
+    i.offset6.rs = strx_toi(argv[1] + 1);
+    i.offset6.offset = strx_toi(argv[2]);
   case OPCODE_ADD: case OPCODE_AND:
     i.immed5.rd = strx_toi(argv[0] + 1);
     i.immed5.rs = strx_toi(argv[1] + 1);
     if (argc >= 3) {
-      if (strx_toi(argv[2])) {
+      if ((i.immed5.flag = strx_toi(argv[2]))) {
         i.immed5.immed = strx_toi(argv[3]);
       } else {
         i.rs2.rs2 = strx_toi(argv[3] + 1);
       }
     }
+    break;
+  case OPCODE_BR:
+    i.br.n = strx_toi(argv[0]);
+    i.br.z = strx_toi(argv[1]);
+    i.br.p = strx_toi(argv[2]);
+    i.br.pcoffset = strx_toi(argv[3]);
+    break;
+  case OPCODE_JMP:
+    i.immed5.rs = strx_toi(argv[0] + 1);
+    break;
+  case OPCODE_NOT:
+    i.immed5.rd = strx_toi(argv[0] + 1);
+    i.immed5.rs = strx_toi(argv[1] + 1);
+    i.immed5.immed = -1;
+    break;
+  case OPCODE_TRAP:
+    i.vect8.vect = strx_toi(argv[0]);
     break;
   }
 
