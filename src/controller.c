@@ -27,7 +27,6 @@ int controller_main() {
     mem.size = MEM_SIZE;
     mem.mem = calloc(1, MEM_SIZE);
     CPU_p cpu = malloc_cpu();
-    cpu_dump(cpu);
 
     Byte opcode;
     Byte rd, sr1, sr2;
@@ -38,6 +37,8 @@ int controller_main() {
 
     //Temp value, will get changed later.
     int instruction = 0;
+    Instruction i;
+    i.val = 0x1163;
 
     int state = FETCH;
     switch (state) {
@@ -49,8 +50,9 @@ int controller_main() {
         cpu_set_pc(cpu, pc++);
 
         //Set IR to equal mem[MAR]
-        //cpu_set_ir(cpu, );
-        //cpu->ir = mem[cpu->mar];
+
+        cpu_set_ir(cpu, i);
+        //cpu_set_ir(cpu, (Instruction) {.val = 0x1153});
 
         state = DECODE;
         break;
@@ -58,19 +60,13 @@ int controller_main() {
 
         switch (instruction) {
         case INS_IMMED5:
-            //        opcode = cpu_get_ir(cpu);
-            //        rd = getRd(cpu);
-            //        sr1 = getRs(cpu);
-            //        immed5 = getImmed(cpu);
-            //        cpu->sext = sext(immed5);
+            //Set SEXT for immed5
+            cpu_set_sext(cpu, i.immed5.immed);
 
             break;
         case INS_IMMED6:
-            //        opcode = cpu_get_ir(cpu);
-            //        rd = getRd(cpu);
-            //        sr1 = getRs(cpu);
-            //        immed6 = getImmed(cpu);
-            //        cpu->sext = sext(immed6);
+            //Set SEXT for immed6
+            cpu_set_sext(cpu, i.immed6.immed);
 
             break;
         case INS_RS2:
@@ -110,8 +106,8 @@ int controller_main() {
         // compute effective address, e.g. add sext(immed7) to register
         switch (OPC) {
 
-        case OPCODE_ADD:     // addresses of dest and src registers already available
-        case OPCODE_AND:     // addresses of dest and src registers already available
+        case OPCODE_ADD: // addresses of dest and src registers already available
+        case OPCODE_AND: // addresses of dest and src registers already available
             break;
         case OPCODE_BR:
             break;
@@ -231,6 +227,7 @@ int controller_main() {
 
         break;
     }
+    cpu_dump(cpu);
 
     return 0;
 }
