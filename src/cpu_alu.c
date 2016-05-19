@@ -13,24 +13,25 @@ struct cpu_alu_t {
     Register a, b, r;
 };
 
-void add(CPU_ALU_p alu) {
-
+Register cpu_alu_add(CPU_ALU_p alu) {
+    return alu-> r = alu->a + alu->b;
 }
 
 int subtract() {
 
+    return 0;
 }
 
 int multiply() {
-
+    return 0;
 }
 
 int and() {
-
+    return 0;
 }
 
 int nand() {
-
+    return 0;
 }
 
 Register cpu_alu_set_a(CPU_ALU_p alu, Register value) {
