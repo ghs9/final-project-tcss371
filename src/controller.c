@@ -154,6 +154,7 @@ int controller_main() {
             // or get memory for load instr.
             switch (OPC) {
             case OPCODE_ADD:
+                cpu_alu_set_a(cpu_get_alu(cpu), 2);
                 //pu->alu->a = cpu->reg_file[rd]; // get first operand
                 //cpu->alu->b = cpu->reg_file[rs];    // get second operand
                 break;
