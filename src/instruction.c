@@ -193,3 +193,8 @@ int instruction_type(Instruction i) {
 
   return t;
 }
+
+int valid_operation(char *s) {
+  return str_in_array(s, (char **) instructs, 2,
+                      sizeof(instructs) / sizeof(*instructs));
+}

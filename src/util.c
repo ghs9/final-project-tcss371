@@ -47,3 +47,18 @@ void print_hex(const char *name, unsigned int val) {
     printf("\t");
   printf(REG_PF " (" INT_PF ")\n", val, val);
 }
+
+int str_in_array(char *s, char *ar[], int stride, int sz) {
+  int j;
+  for (j = 0; j < sz; j++) {
+    if (strcmp(ar[j * stride], s) == 0) {
+      break;
+    }
+  }
+
+  if (j >= sz) {
+    return 0;
+  }
+
+  return 1;
+}

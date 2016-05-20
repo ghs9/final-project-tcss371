@@ -13,7 +13,6 @@
 #include <signal.h>
 
 int main(int argc, char *argv[]) {
-  signal(SIGINT, controller_signal);
   if (argc > 1) {
     if (strcmp(argv[1], "-ch") == 0) {
       printf("0x%04X\n", compile_instruction(argc - 2, argv + 2));
@@ -23,5 +22,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  signal(SIGINT, controller_signal);
   return controller_main();
 }
