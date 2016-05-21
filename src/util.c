@@ -10,11 +10,14 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 unsigned int strx_toi(const char *s) {
     unsigned int r = 0;
     if (*s == '0' && tolower(*(s + 1)) == 'x')
-        s += 2;
+      s += 2;
+    else if (*s == 'x')
+      s += 1;
 
     while (*s) {
       r *= 16;
@@ -37,6 +40,20 @@ unsigned int strb_toi(const char *s) {
     return r;
 }
 
+unsigned int str_toi(const char *s, int *error) {
+  *error = 0;
+  switch (s[0]) {
+  case '#': return atoi(s + 1);
+  case 'b': return strb_toi(s + 1);
+  case 'x': return strx_toi(s + 1);
+  case 'R': return strx_toi(s + 1);
+  default:
+    printf("Failed to convert %s to number\n", s);
+    return atoi(s + 1);
+    *error = 1;
+    return -1;
+  }
+}
 
 #define REG_PF "0x%04X"
 #define INT_PF "%4d"
@@ -60,5 +77,5 @@ int str_in_array(char *s, char *ar[], int stride, int sz) {
     return 0;
   }
 
-  return 1;
+  return j + 1;
 }

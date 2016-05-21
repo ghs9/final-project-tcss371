@@ -53,7 +53,7 @@ void instruction_dump(Instruction i) {
     print_hex("immed6", i.offset6.offset);
     break;
   case INS_RS2:
-    print_opcode_chopped(i, 4, (int []) {4, 7, 10, 12});
+    print_opcode_chopped(i, 4, (int []) {4, 7, 10, 13});
     print_hex("RD", i.rs2.rd);
     print_hex("RS", i.rs2.rs);
     print_hex("pad", i.rs2.pad);
@@ -84,6 +84,7 @@ void instruction_dump(Instruction i) {
   }
 }
 
+int is_br_instruct(char *s);
 
 static const struct {
   const char *name;
@@ -103,63 +104,65 @@ static const struct {
   {INSTRUCT_STR, OPCODE_STR},
   {INSTRUCT_TRAP, OPCODE_TRAP},};
 
-Register compile_instruction(int argc, char *argv[]) {
+Register compile_instruction(int argc, char *argv[], int *error) {
   Instruction i;
-
-  unsigned int j;
-  for (j = 0; j < sizeof(instructs) / sizeof(*instructs); j++) {
-    if (strcmp(instructs[j].name, argv[0]) == 0) {
-      i.opcode.opcode = instructs[j].opcode;
-      break;
-    }
-  }
-
-  if (j >= sizeof(instructs) / sizeof(*instructs)) {
-    printf("Invalid operation\n");
+  i.opcode.opcode = instruction_to_opcode(argv[0]);
+  if (i.opcode.opcode < 0) {
+    *error = -1;
     return -1;
   }
+
+  int j;
+  for (j = 0; j < argc; j++) {
+    printf("%s ", argv[j]);
+  }
+  printf("\n");
 
   argv ++; argc --;
   switch (i.opcode.opcode) {
   case OPCODE_LD: case OPCODE_LDI: case OPCODE_LEA:
   case OPCODE_ST: case OPCODE_STI:
-    i.pcoff9.r = strx_toi(argv[0] + 1);
-    i.pcoff9.pcoffset = strx_toi(argv[1]);
+    i.pcoff9.r = str_toi(argv[0], error);
+    i.pcoff9.pcoffset = str_toi(argv[1], error);
     break;
   case OPCODE_LDR: case OPCODE_STR:
-    i.offset6.rd = strx_toi(argv[0] + 1);
-    i.offset6.rs = strx_toi(argv[1] + 1);
-    i.offset6.offset = strx_toi(argv[2]);
+    i.offset6.rd = str_toi(argv[0], error);
+    i.offset6.rs = str_toi(argv[1], error);
+    i.offset6.offset = str_toi(argv[2], error);
+    break;
   case OPCODE_ADD: case OPCODE_AND:
-    i.immed5.rd = strx_toi(argv[0] + 1);
-    i.immed5.rs = strx_toi(argv[1] + 1);
-    if (argc >= 3) {
-      if ((i.immed5.flag = strx_toi(argv[2]))) {
-        i.immed5.immed = strx_toi(argv[3]);
+    i.immed5.rd = str_toi(argv[0], error);
+    i.immed5.rs = str_toi(argv[1], error);
+    if (argc > 2) {
+      if (argv[2][0] == 'R') {
+        i.rs2.rs2 = str_toi(argv[2], error);
+        i.rs2.pad = 0;
       } else {
-        i.rs2.rs2 = strx_toi(argv[3] + 1);
+        i.immed5.flag = 1;
+        i.immed5.immed = str_toi(argv[2], error);
       }
     }
     break;
   case OPCODE_BR:
-    i.br.n = strx_toi(argv[0]);
-    i.br.z = strx_toi(argv[1]);
-    i.br.p = strx_toi(argv[2]);
-    i.br.pcoffset = strx_toi(argv[3]);
+    i.pcoff9.r = is_br_instruct(argv[-1]) >> 1;
+    i.br.pcoffset = str_toi(argv[0], error);
+    printf("BR OPC = %d\n", i.opcode.opcode);
     break;
   case OPCODE_JMP:
-    i.immed5.rs = strx_toi(argv[0] + 1);
+    i.immed5.rs = str_toi(argv[0], error);
     break;
   case OPCODE_NOT:
-    i.immed5.rd = strx_toi(argv[0] + 1);
-    i.immed5.rs = strx_toi(argv[1] + 1);
+    i.immed5.rd = str_toi(argv[0], error);
+    i.immed5.rs = str_toi(argv[1], error);
+    i.immed5.flag = 1;
     i.immed5.immed = -1;
     break;
   case OPCODE_TRAP:
-    i.vect8.vect = strx_toi(argv[0]);
+    i.vect8.vect = str_toi(argv[0], error);
     break;
   }
 
+  *error = 0;
   return i.val;
 }
 
@@ -195,6 +198,42 @@ int instruction_type(Instruction i) {
 }
 
 int valid_operation(char *s) {
-  return str_in_array(s, (char **) instructs, 2,
-                      sizeof(instructs) / sizeof(*instructs));
+  int r = str_in_array(s, (char **) instructs, 2,
+                       sizeof(instructs) / sizeof(*instructs));
+  return r;// is_br_instruct(s);
+}
+
+int instruction_to_opcode(char *s) {
+  int r = -1;
+  unsigned int j;
+  for (j = 0; j < sizeof(instructs) / sizeof(*instructs); j++) {
+    if (strcmp(instructs[j].name, s) == 0 || is_br_instruct(s)) {
+      r = instructs[j].opcode;
+      break;
+    }
+  }
+
+  if (r < 0) {
+    printf("Invalid operation\n");
+  }
+  return r;
+}
+
+int is_br_instruct(char *s) {
+  int r = 0;
+  // B R x x x 0 = 7
+  if (strlen(s) >= 2 && s[0] == 'B' && s[1] == 'R') {
+    r = 1;
+    int i;
+    // printf("br + %s\n", s + 2);
+    for (i = 0; i < 4 && i + 2 < strlen(s); i++) {
+      char c = s[i + 2];
+      switch (c) {
+      case 'n': r |= 1 << 3; break;
+      case 'z': r |= 1 << 2; break;
+      case 'p': r |= 1 << 1; break;
+      }
+    }
+  }
+  return r;
 }

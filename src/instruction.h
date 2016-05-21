@@ -71,8 +71,8 @@ typedef union instruction_t {
 
 int instruction_type(Instruction i);
 void instruction_dump(Instruction i);
-Register compile_instruction(int argc, char *argv[]);
+Register compile_instruction(int argc, char *argv[], int *error);
 int valid_operation(char *s);
-
+int instruction_to_opcode(char *s);
 
 #endif

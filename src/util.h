@@ -11,6 +11,7 @@
 
 unsigned int strx_toi(const char *s);
 unsigned int strb_toi(const char *s);
+unsigned int str_toi(const char *s, int *error);
 
 void print_hex(const char *name, unsigned int val);
 
