@@ -112,11 +112,11 @@ Register compile_instruction(int argc, char *argv[], int *error) {
     return -1;
   }
 
-  int j;
-  for (j = 0; j < argc; j++) {
-    printf("%s ", argv[j]);
-  }
-  printf("\n");
+  /* int j; */
+  /* for (j = 0; j < argc; j++) { */
+  /*   printf("%s ", argv[j]); */
+  /* } */
+  /* printf("\n"); */
 
   argv ++; argc --;
   switch (i.opcode.opcode) {
@@ -146,7 +146,6 @@ Register compile_instruction(int argc, char *argv[], int *error) {
   case OPCODE_BR:
     i.pcoff9.r = is_br_instruct(argv[-1]) >> 1;
     i.br.pcoffset = str_toi(argv[0], error);
-    printf("BR OPC = %d\n", i.opcode.opcode);
     break;
   case OPCODE_JMP:
     i.immed5.rs = str_toi(argv[0], error);
@@ -200,29 +199,34 @@ int instruction_type(Instruction i) {
 int valid_operation(char *s) {
   int r = str_in_array(s, (char **) instructs, 2,
                        sizeof(instructs) / sizeof(*instructs));
-  return r;// is_br_instruct(s);
+  return r || is_br_instruct(s);
 }
 
 int instruction_to_opcode(char *s) {
-  int r = -1;
-  unsigned int j;
-  for (j = 0; j < sizeof(instructs) / sizeof(*instructs); j++) {
-    if (strcmp(instructs[j].name, s) == 0 || is_br_instruct(s)) {
-      r = instructs[j].opcode;
-      break;
+  static const unsigned sz = sizeof(instructs) / sizeof(*instructs);
+  unsigned j;
+  if (is_br_instruct(s)) {
+    return OPCODE_BR;
+  } else {
+    for (j = 0; j < sz; j++) {
+      if (strcmp(instructs[j].name, s) == 0) {
+        break;
+      }
     }
   }
 
-  if (r < 0) {
+  if (j >= sz) {
     printf("Invalid operation\n");
+    return -1;
   }
-  return r;
+  return instructs[j].opcode;
 }
 
 int is_br_instruct(char *s) {
   int r = 0;
   // B R x x x 0 = 7
   if (strlen(s) >= 2 && s[0] == 'B' && s[1] == 'R') {
+    /* printf("%s is a br\n", s); */
     r = 1;
     int i;
     // printf("br + %s\n", s + 2);

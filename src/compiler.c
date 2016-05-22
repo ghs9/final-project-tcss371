@@ -87,7 +87,11 @@ int scan_symbols(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     if (p->num_symbols > MAX_SYMBOLS) {
       printf("Too many labels in program (last = %s)\n", tokens[0]);
       return 1;
+    } else if (is_symbol(tokens[0], p)) {
+      printf("Reuse of '%s' is not allowed\n", tokens[0]);
+      return 1;
     }
+    /* printf("Added symbol %s\n", tokens[0]); */
     strcpy(p->symbols[p->num_symbols].name, tokens[0]);
     p->symbols[p->num_symbols].addr = effective_line_on;
     p->num_symbols++;
@@ -110,9 +114,8 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     //printf("OK symbol: %s\n", tokens[0]);
     tokens ++;
     ntoks --;
-  } else {
-    //printf("Not a valid symbol: %s\n", tokens[0]);
   }
+
   int is_directive = valid_directive(tokens[0]);
   int is_operation = valid_operation(tokens[0]);
 
@@ -121,10 +124,10 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     return 1;
   }
 
-  for (i = 0; i < ntoks; i++) {
-    printf("%s ", tokens[i]);
-  }
-  printf("-> ");
+  /* for (i = 0; i < ntoks; i++) { */
+  /*   printf("%s ", tokens[i]); */
+  /* } */
+  /* printf("-> "); */
 
   if (is_operation) {
     char buf[9] = {0};
@@ -134,7 +137,7 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
       if (!valid_operation(tokens[i]) &&
           !valid_directive(tokens[i]) &&
           (j = is_symbol(tokens[i], p))) {
-        sprintf(buf, "x%X", p->symbols[j - 1].addr - effective_line_on - 1);
+        sprintf(buf, "x%04hX", (Register) (p->symbols[j - 1].addr - effective_line_on - 1));
         tokens[i] = buf;
       }
     }
@@ -143,8 +146,8 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     Instruction ins = {.val = compile_instruction(ntoks, tokens, &err)};
     if (err)
       return err;
-    instruction_dump(ins);
-    printf("\n\n");
+    /* instruction_dump(ins); */
+    /* printf("\n\n"); */
     p->img[p->sz] = ins.val;
     p->sz++;
   } else if (is_directive) {
@@ -155,7 +158,7 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
       p->start_addr = str_toi(tokens[1], &err);
       if (err)
         return 1;
-      printf("Start addr = 0x%X\n", p->start_addr);
+      /* printf("Start addr = 0x%X\n", p->start_addr); */
       p->img[0] = p->start_addr;
       p->sz = 1;
       break;
