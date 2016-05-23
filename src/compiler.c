@@ -37,18 +37,6 @@ typedef struct prog_t {
 void skip_whitespace(char **finbf_ptr, char *end);
 int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], Prog_p p, int effective_line_on));
 
-void swap_endian(void *ptr, int sz, int n) {
-  char *s = ptr;
-  int i, j;
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < sz / 2; j++) {
-      int tmp = s[i * sz + (sz - j - 1)];
-      s[i * sz + (sz - j - 1)] = s[i * sz + j];
-      s[i * sz + j] = tmp;
-    }
-  }
-}
-
 static const char *directives[] = {
   ".ORIG",
   ".FILL",
@@ -105,9 +93,6 @@ int scan_symbols(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
 }
 
 int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
-  Instruction ins;
-  ins.val = 0;
-
   int i;
   /* for (i = 0; i < ntoks; i++) { */
   /*   printf("%s (%d)", tokens[i], strlen(tokens[i])); */

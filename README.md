@@ -15,36 +15,36 @@ You are working in pairs but may divide the work as you think necessary. Make su
 
 Instructions
 ------------
-* ADD
-* ADD(i)
-* AND
-* AND(i)
-* BR
-* JMP
-* JSR
-* LD
-* LEA
-* NOT
-* RET
-* ST
-* TRAP
+- [ ] ADD
+- [ ] ADD(i)
+- [ ] AND
+- [ ] AND(i)
+- [ ] BR
+- [ ] JMP
+- [ ] JSR
+- [ ] LD
+- [ ] LEA
+- [ ] NOT
+- [ ] RET
+- [ ] ST
+- [ ] TRAP
 
 Extra credit:
 -------------
-* LDR
-* STR
-* LDI
-* STI
+- [ ] LDR
+- [ ] STR
+- [ ] LDI
+- [ ] STI
 
 Other Details
 -------------
 The first set of instructions should allow your simulator to run interesting programs.
 
 In addition to the instructions, you will need to implement simulations of several of the TRAP routines as described in Appendix A.
-* GETC
-* OUT
-* PUTS
-* HALT
+- [ ] GETC
+- [ ] OUT
+- [ ] PUTS
+- [ ] HALT
 
 Additional Implementations
 ==========================

@@ -17,4 +17,6 @@ void print_hex(const char *name, unsigned int val);
 
 int str_in_array(char *s, char *ar[], int stride, int sz);
 
+void swap_endian(void *ptr, int sz, int n);
+
 #endif

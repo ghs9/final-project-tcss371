@@ -9,9 +9,10 @@
 #include "cpu_all.h"
 #include "controller.h"
 #include "opcodes.h"
+#include "util.h"
 #include <signal.h>
 
-#define MEM_SIZE 1000
+#define DEFAULT_MEM_SIZE 0x4000 // take into account +0x3000 offset (.ORIG)
 
 /********    STATES    *******/
 #define FETCH       0
@@ -21,22 +22,17 @@
 #define EXECUTE     4
 #define STORE       5
 
+#define NUM_COL 8
+void mem_dump(Memory_p m);
+void controller_menu();
+
 #define OPC cpu_get_ir(cpu).opcode.opcode
 
 static int IS_RUNNING = 1;
 static CPU_p cpu;
-static Memory_s mem;
-
-
-void mem_dump(Memory_p memptr) {
-    printf("aaaaa\n");
-}
+static Memory_s mem = {0, 0};
 
 int controller_main() {
-    mem.size = MEM_SIZE;
-    mem.mem = calloc(1, MEM_SIZE);
-    cpu = malloc_cpu();
-
     Register branch_taken_addr;
 
     //Temp value, will get changed later.
@@ -45,23 +41,8 @@ int controller_main() {
     i.val = 0x1163;
 
     int state = FETCH;
-    for (; IS_RUNNING;) {   // efficient endless loop
-        if (IS_RUNNING == 2) {
-            printf("\n--- Paused CPU ---\n");
-            printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
-            char c = getchar();
-            if (c == 'q')
-                IS_RUNNING = 0;
-            else if (c == 'c') {
-                cpu_dump(cpu);
-            } else if (c == 'm') {
-                mem_dump(&mem);
-            } else if (c == 'p') {
-                mem_dump(&mem);
-                cpu_dump(cpu);
-            }
-            IS_RUNNING = 1;
-        }
+    while (IS_RUNNING) {
+        controller_menu();
 
         switch (state) {
         case FETCH:
@@ -259,6 +240,88 @@ int controller_main() {
     return 0;
 }
 
+int controller_main_default() {
+    mem.size = DEFAULT_MEM_SIZE;
+    mem.mem = calloc(1, DEFAULT_MEM_SIZE);
+    cpu = malloc_cpu();
+    return controller_main();
+}
+
+int controller_main_prog(const char *prog_name) {
+    FILE *fin = fopen(prog_name, "rb");
+    if (!fin) {
+        printf("Failed to open program file %s\n", prog_name);
+        return -1;
+    }
+
+    int prog_size = -1;
+    fseek(fin, 0L, SEEK_END);
+    mem.size = (prog_size = ftell(fin) - sizeof(Register)) / sizeof(Register);
+    /* if (mem.size < DEFAULT_MEM_SIZE) */
+    /*     mem.size = DEFAULT_MEM_SIZE; */
+    rewind(fin);
+
+    // Load program into memory
+    Register start_addr;
+    size_t ret = fread(&start_addr, sizeof(start_addr), 1, fin);
+    if (!ret) {
+        printf("Could not read start addr from program file %s\n", prog_name);
+        return -1;
+    }
+    swap_endian(&start_addr, sizeof(start_addr), 1);
+    printf("Start addr = " REG_PF "\n", start_addr);
+    mem.size += start_addr;
+
+    mem.mem = calloc(1, mem.size * sizeof(Register));
+    if (!mem.mem) {
+        printf("Could not malloc mem\n");
+        return -1;
+    }
+    ret = fread(&mem.mem[start_addr], prog_size, 1, fin);
+    if (!ret) {
+        printf("Could not read from program file %s\n", prog_name);
+        return -1;
+    }
+    fclose(fin);
+    swap_endian(mem.mem, sizeof(Register), mem.size);
+
+    cpu = malloc_cpu();
+    cpu_set_pc(cpu, mem.mem[0]);
+    return controller_main();
+}
+
 void controller_signal(int v) {
     IS_RUNNING = 2;
+}
+
+void mem_dump(Memory_p m) {
+    unsigned int r, c;
+    for (r = 0; r < m->size / NUM_COL; r++) {
+        printf(REG_PF ">", r * NUM_COL);
+        for (c = 0; c < NUM_COL; c++) {
+            printf(" " REG_PF, m->mem[r * NUM_COL + c]);
+        }
+        printf("\n");
+    }
+    printf("Mem sz: " REG_PF " (" REG_PF " bytes)\n", m->size,
+           m->size * (unsigned) sizeof(Register));
+}
+
+void controller_menu() {
+    if (IS_RUNNING == 2) {
+        printf("\n--- Paused CPU ---\n");
+        printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
+        char c = getchar();
+        if (c == 'q')
+            IS_RUNNING = 0;
+        else if (c == 'c') {
+            cpu_dump(cpu);
+        } else if (c == 'm') {
+            mem_dump(&mem);
+        } else if (c == 'p') {
+            mem_dump(&mem);
+            cpu_dump(cpu);
+        }
+        IS_RUNNING = 1;
+    }
 }

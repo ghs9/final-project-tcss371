@@ -7,6 +7,7 @@
  */
 
 #include "util.h"
+#include "core.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,9 +56,6 @@ unsigned int str_toi(const char *s, int *error) {
   }
 }
 
-#define REG_PF "0x%04X"
-#define INT_PF "%4d"
-
 void print_hex(const char *name, unsigned int val) {
   printf("%s:\t", name);
   if (strlen(name) < 8)
@@ -78,4 +76,16 @@ int str_in_array(char *s, char *ar[], int stride, int sz) {
   }
 
   return j + 1;
+}
+
+void swap_endian(void *ptr, int sz, int n) {
+  char *s = ptr;
+  int i, j;
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < sz / 2; j++) {
+      int tmp = s[i * sz + (sz - j - 1)];
+      s[i * sz + (sz - j - 1)] = s[i * sz + j];
+      s[i * sz + j] = tmp;
+    }
+  }
 }
