@@ -15,7 +15,10 @@
 int main(int argc, char *argv[]) {
   if (argc > 1) {
     if (strcmp(argv[1], "-ch") == 0) {
-      printf("0x%04X\n", compile_instruction(argc - 2, argv + 2));
+      int err = 0;
+      printf("0x%04X, err = %d\n",
+             compile_instruction(argc - 2, argv + 2, &err),
+             err);
       return 0;
     } else if (strcmp(argv[1], "-c") == 0) {
       return compile(argv[2]);

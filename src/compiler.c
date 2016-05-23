@@ -4,6 +4,11 @@
  * Final Project
  * Viveret Steele (viveret@uw.edu)
  * Amy Irving
+ *
+ * Doesn't currently free memory when appropriate,
+ * And has a few hacky parts but its relatively
+ * Bug free and translates assembly to the LC3
+ * Exactly how 'lc3as' would.
  */
 
 #include "compiler.h"
