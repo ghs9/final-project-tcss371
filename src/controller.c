@@ -111,6 +111,8 @@ int controller_main() {
             case OPCODE_AND: // addresses of dest and src registers already available
                 break;
             case OPCODE_BR:
+                //check if Z N or p is 1. Compute
+                //PC + SEXT for the effective address?
                 break;
             case OPCODE_JMP:
             case OPCODE_JSR:
@@ -165,27 +167,42 @@ int controller_main() {
                 }            //end else
                 break;
             case OPCODE_BR:
+                //PC = computed effective address
                 break;
             case OPCODE_JMP:
+                //PC = BASER
                 break;
             case OPCODE_JSR:
+                //PC = computed effective address
                 break;
             case OPCODE_LD:
+                //Dr = mem[PC +SEXT]
                 //cpu->mdr = mem[cpu->mdr];
                 break;
             case OPCODE_LDI:
+                //Dr = mem[PC +SEXT]
                 //cpu->mdr = cpu->sext;
                 break;
             case OPCODE_LDR:
+                //Dr = mem[PC +SEXT]
+                break;
             case OPCODE_LEA:
+                //PC = computed effective address
             case OPCODE_NOT:
+                //ALU NOT operation
                 break;
             case OPCODE_ST:
+                //MEmory [effective address] = SR
                 //cpu->mdr = cpu->reg_file[rs];
                 break;
             case OPCODE_STI:
+                //MEmory [effective address] = SR
+                break;
             case OPCODE_TRAP:
+                //R7 = pc
+                //Pc = mem[trapVect]
             case OPCODE_STR:
+                //MEmory [effective address] = SR
                 break;
             }
 
