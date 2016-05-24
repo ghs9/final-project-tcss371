@@ -34,13 +34,13 @@ void controller_menu();
 
 static int CONTROLLER_STATE = CTRLR_RUNNING;
 static CPU_p cpu;
-static Memory_s mem = {0, 0};
+static Memory_s mem = { 0, 0 };
 
 int controller_main() {
     Register branch_taken_addr;
 
     //Temp value, will get changed later.
-    int instruction = 0;
+    //int instruction = 0;
     Instruction i;
     i.val = 0x1163;
 
@@ -51,6 +51,7 @@ int controller_main() {
 
         switch (state) {
         case FETCH:
+
             //Sets MAR to PC.
             cpu_set_mar(cpu, cpu_get_pc(cpu));
             //increment PC
@@ -65,7 +66,8 @@ int controller_main() {
             break;
         case DECODE:
 
-            switch (instruction) {
+            //Gets the instruction type and sets the SEXT accordingly.
+            switch (instruction_type(cpu_get_ir(cpu))) {
             case INS_IMMED5:
                 //Set SEXT for immed5
                 cpu_set_sext(cpu, i.immed5.immed);
@@ -95,7 +97,8 @@ int controller_main() {
 
                 break;
             case INS_VECT8:
-                //Set ZEXT (Zero Extension) using the VECT8
+                // Set ZEXT (Zero Extension) using the VECT8.
+                // Do nothing.
                 break;
             }
 
@@ -140,21 +143,26 @@ int controller_main() {
             switch (OPC) {
             case OPCODE_ADD:
 
-                //TEST WHETHER OR NOT BIT[5] = 1 or 0.
-//                if (){
-//
-//                }   else{
-//
-//                }
-//                // get first operand
-//                //cpu->alu->a = cpu->reg_file[rd];
-//                cpu_alu_set_a(cpu_get_alu(cpu), cpu_get_reg(cpu, cpu_get_ir(cpu).immed5.rd));
-//
-//                // get second operand
-//                //cpu->alu->b = cpu->reg_file[rs];
-//                cpu_alu_set_b(cpu_get_alu(cpu), cpu_get_reg(cpu, cpu_get_ir(cpu).immed5.rs));
-
+                //If the flag at bit[5] is not zero, then we're adding the SR1 and immed5.
+                if (0 != cpu_get_ir(cpu).immed5.flag) {
+                    // get first operand
+                    cpu_alu_set_a(cpu_get_alu(cpu),
+                            cpu_get_reg(cpu, cpu_get_ir(cpu).immed5.rs));
+                    // get second operand
+                    cpu_alu_set_b(cpu_get_alu(cpu),
+                            cpu_get_reg(cpu, cpu_get_ir(cpu).immed5.immed));
+                }
+                // we're adding the SR1 and SR2.
+                else {
+//                    // get first operand
+//                    cpu_alu_set_a(cpu_get_alu(cpu),
+//                            cpu_get_reg(cpu, cpu_get_ir(cpu).rs2.rs));
+//                    // get second operand
+//                    cpu_alu_set_b(cpu_get_alu(cpu),
+//                            cpu_get_reg(cpu, cpu_get_ir(cpu)rs2.rs2));
+                }//end else
                 break;
+
             case OPCODE_AND:
                 break;
             case OPCODE_BR:
@@ -187,7 +195,7 @@ int controller_main() {
         case EXECUTE:
             switch (OPC) {
             case OPCODE_ADD:
-                //alu add(), store result in alu_r
+                cpu_alu_add(cpu_get_alu(cpu));
                 break;
             case OPCODE_AND:
                 //alu and(), store result in alu_r
@@ -219,6 +227,7 @@ int controller_main() {
 
             switch (OPC) {
             case OPCODE_ADD:
+                cpu_set_reg(cpu, cpu_get_ir(cpu).immed5.rd, cpu_alu_get_r(cpu_get_alu(cpu)));
                 break;
             case OPCODE_AND:
                 break;
@@ -325,7 +334,7 @@ void mem_dump(Memory_p m) {
         printf("\n");
     }
     printf("Mem sz: " REG_PF " (" REG_PF " bytes)\n", m->size,
-           m->size * (unsigned) sizeof(Register));
+            m->size * (unsigned) sizeof(Register));
 }
 
 void controller_menu() {
