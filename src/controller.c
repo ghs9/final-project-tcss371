@@ -141,7 +141,9 @@ int controller_main() {
             // get operands out of registers into A, B of ALU
             // or get memory for load instr.
             switch (OPC) {
+            // Add and And both load the same bit values into the ALU.
             case OPCODE_ADD:
+            case OPCODE_AND:
 
                 //If the flag at bit[5] is not zero, then we're adding the SR1 and immed5.
                 if (0 != cpu_get_ir(cpu).immed5.flag) {
@@ -154,16 +156,13 @@ int controller_main() {
                 }
                 // we're adding the SR1 and SR2.
                 else {
-//                    // get first operand
-//                    cpu_alu_set_a(cpu_get_alu(cpu),
-//                            cpu_get_reg(cpu, cpu_get_ir(cpu).rs2.rs));
-//                    // get second operand
-//                    cpu_alu_set_b(cpu_get_alu(cpu),
-//                            cpu_get_reg(cpu, cpu_get_ir(cpu)rs2.rs2));
-                }//end else
-                break;
-
-            case OPCODE_AND:
+                    // get first operand
+                    cpu_alu_set_a(cpu_get_alu(cpu),
+                            cpu_get_reg(cpu, cpu_get_ir(cpu).rs2.rs));
+                    // get second operand
+                    cpu_alu_set_a(cpu_get_alu(cpu),
+                            cpu_get_reg(cpu, cpu_get_ir(cpu).rs2.rs2));
+                }            //end else
                 break;
             case OPCODE_BR:
                 break;
@@ -198,7 +197,7 @@ int controller_main() {
                 cpu_alu_add(cpu_get_alu(cpu));
                 break;
             case OPCODE_AND:
-                //alu and(), store result in alu_r
+                cpu_alu_and(cpu_get_alu(cpu));
                 break;
             case OPCODE_BR:
                 break;
@@ -227,9 +226,11 @@ int controller_main() {
 
             switch (OPC) {
             case OPCODE_ADD:
-                cpu_set_reg(cpu, cpu_get_ir(cpu).immed5.rd, cpu_alu_get_r(cpu_get_alu(cpu)));
-                break;
             case OPCODE_AND:
+                // We're using the immed5.rd to find the location,
+                // it should be the same value as the sr2.rd value.
+                cpu_set_reg(cpu, cpu_get_ir(cpu).immed5.rd,
+                        cpu_alu_get_r(cpu_get_alu(cpu)));
                 break;
             case OPCODE_BR:
                 break;
