@@ -249,7 +249,9 @@ int controller_main_default() {
     mem.size = DEFAULT_MEM_SIZE;
     mem.mem = calloc(1, DEFAULT_MEM_SIZE);
     cpu = malloc_cpu();
-    return controller_main();
+    int r = controller_main();
+    free(mem.mem);
+    return r;
 }
 
 int controller_main_prog(const char *prog_name) {
@@ -259,40 +261,53 @@ int controller_main_prog(const char *prog_name) {
         return -1;
     }
 
-    int prog_size = -1;
     fseek(fin, 0L, SEEK_END);
-    mem.size = (prog_size = ftell(fin) - sizeof(Register)) / sizeof(Register);
+    int prog_size = ftell(fin) - sizeof(Register);
+    mem.size = prog_size / sizeof(Register);
+    rewind(fin);
     /* if (mem.size < DEFAULT_MEM_SIZE) */
     /*     mem.size = DEFAULT_MEM_SIZE; */
-    rewind(fin);
 
-    // Load program into memory
+    // Find out start address
     Register start_addr;
     size_t ret = fread(&start_addr, sizeof(start_addr), 1, fin);
     if (!ret) {
         printf("Could not read start addr from program file %s\n", prog_name);
+        fclose(fin);
         return -1;
     }
+
     swap_endian(&start_addr, sizeof(start_addr), 1);
-    printf("Start addr = " REG_PF "\n", start_addr);
-    mem.size += start_addr;
+    // printf("Start addr = " REG_PF "\n", start_addr);
+    mem.size += start_addr + 1000;
+    if (mem.size % 8 != 0)
+        mem.size += mem.size % 8;
 
     mem.mem = calloc(1, mem.size * sizeof(Register));
     if (!mem.mem) {
         printf("Could not malloc mem\n");
+        fclose(fin);
         return -1;
     }
+
+    // Load program into memory
     ret = fread(&mem.mem[start_addr], prog_size, 1, fin);
     if (!ret) {
         printf("Could not read from program file %s\n", prog_name);
+        free(mem.mem);
+        fclose(fin);
         return -1;
     }
     fclose(fin);
     swap_endian(mem.mem, sizeof(Register), mem.size);
 
     cpu = malloc_cpu();
-    cpu_set_pc(cpu, mem.mem[0]);
-    return controller_main();
+    cpu_set_pc(cpu, start_addr);
+    int r = controller_main();
+
+    free_cpu(cpu);
+    free(mem.mem);
+    return r;
 }
 
 void controller_signal(int v) {

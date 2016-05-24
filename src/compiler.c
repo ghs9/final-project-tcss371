@@ -176,10 +176,11 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
 int compile(const char *file_name_in) {
   FILE *fin = fopen(file_name_in, "r");
   if (!fin) {
-    printf("Failed to open '%s'\n", file_name_in);
+    printf("Failed to open '%s' for reading\n", file_name_in);
     return -1;
   }
 
+  printf("Reading %s\n", file_name_in);
   char file_name_out[100];
   char *fname_start_ext = strchr(file_name_in, '.');
   if (fname_start_ext) {
@@ -188,10 +189,11 @@ int compile(const char *file_name_in) {
   } else {
     strcpy(file_name_out, file_name_in);
   }
+
   sprintf(file_name_out + strlen(file_name_out), ".obj");
   FILE *fout = fopen(file_name_out, "wb");
   if (!fout) {
-    printf("Failed to open '%s'\n", file_name_out);
+    printf("Failed to open '%s' for writing\n", file_name_out);
     return -1;
   }
 
@@ -216,6 +218,7 @@ int compile(const char *file_name_in) {
 
   swap_endian(p.img, sizeof(Register), p.sz);
   fwrite(p.img, p.sz * sizeof(*p.img), 1, fout);
+  free(p.img);
 
   return 0;
 }
@@ -301,8 +304,12 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
     lineEnd:
       finbf = eol + 1;
       line_num++;
+      int i;
+      for (i = 0; i < ntoks; i++)
+        free(tokens[i]);
     }
   }
   rewind(fin);
+  free(fin_buf);
   return errors;
 }
