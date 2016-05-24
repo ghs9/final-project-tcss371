@@ -250,6 +250,7 @@ int controller_main_default() {
     mem.mem = calloc(1, DEFAULT_MEM_SIZE);
     cpu = malloc_cpu();
     int r = controller_main();
+    free_cpu(cpu);
     free(mem.mem);
     return r;
 }
@@ -329,18 +330,32 @@ void mem_dump(Memory_p m) {
 
 void controller_menu() {
     printf("\n--- Paused CPU ---\n");
-    printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
-    char c = getchar();
-    if (c == 'q') {
-        CONTROLLER_STATE = CTRLR_DONE;
-        return;
-    } else if (c == 'c') {
-        cpu_dump(cpu);
-    } else if (c == 'm') {
-        mem_dump(&mem);
-    } else if (c == 'p') {
-        mem_dump(&mem);
-        cpu_dump(cpu);
+    printf("Menu:\nq) Quit\np) Dump all\nu) Dump cpu\nm) Dump memory\nc) Continue\ns) Step\n");
+    char c;
+    for (;;) {
+        if (c != '\n' && c != '\r')
+            printf("> ");
+        c = getchar();
+
+        if (c == 'q') {
+            CONTROLLER_STATE = CTRLR_DONE;
+            return;
+        } else if (c == 'u') {
+            cpu_dump(cpu);
+        } else if (c == 'm') {
+            mem_dump(&mem);
+        } else if (c == 'p') {
+            mem_dump(&mem);
+            cpu_dump(cpu);
+        } else if (c == 'c') {
+            break;
+        } else if (c == 's') {
+            return;
+        } else if (c == '\n' || c == '\r') {
+            continue;
+        } else {
+            printf("Invalid menu selection, please try again.\n");
+        }
     }
     CONTROLLER_STATE = CTRLR_RUNNING;
 }
