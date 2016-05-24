@@ -28,7 +28,11 @@ void controller_menu();
 
 #define OPC cpu_get_ir(cpu).opcode.opcode
 
-static int IS_RUNNING = 1;
+#define CTRLR_DONE    0
+#define CTRLR_RUNNING 1
+#define CTRLR_MENU    2
+
+static int CONTROLLER_STATE = CTRLR_RUNNING;
 static CPU_p cpu;
 static Memory_s mem = {0, 0};
 
@@ -41,8 +45,9 @@ int controller_main() {
     i.val = 0x1163;
 
     int state = FETCH;
-    while (IS_RUNNING) {
-        controller_menu();
+    while (CONTROLLER_STATE != CTRLR_DONE) {
+        if (CONTROLLER_STATE == CTRLR_MENU)
+            controller_menu();
 
         switch (state) {
         case FETCH:
@@ -291,7 +296,7 @@ int controller_main_prog(const char *prog_name) {
 }
 
 void controller_signal(int v) {
-    IS_RUNNING = 2;
+    CONTROLLER_STATE = CTRLR_MENU;
 }
 
 void mem_dump(Memory_p m) {
@@ -308,20 +313,19 @@ void mem_dump(Memory_p m) {
 }
 
 void controller_menu() {
-    if (IS_RUNNING == 2) {
-        printf("\n--- Paused CPU ---\n");
-        printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
-        char c = getchar();
-        if (c == 'q')
-            IS_RUNNING = 0;
-        else if (c == 'c') {
-            cpu_dump(cpu);
-        } else if (c == 'm') {
-            mem_dump(&mem);
-        } else if (c == 'p') {
-            mem_dump(&mem);
-            cpu_dump(cpu);
-        }
-        IS_RUNNING = 1;
+    printf("\n--- Paused CPU ---\n");
+    printf("Menu:\nq) Quit\np) Dump all\nc) Dump cpu\nm) Dump memory\n");
+    char c = getchar();
+    if (c == 'q') {
+        CONTROLLER_STATE = CTRLR_DONE;
+        return;
+    } else if (c == 'c') {
+        cpu_dump(cpu);
+    } else if (c == 'm') {
+        mem_dump(&mem);
+    } else if (c == 'p') {
+        mem_dump(&mem);
+        cpu_dump(cpu);
     }
+    CONTROLLER_STATE = CTRLR_RUNNING;
 }

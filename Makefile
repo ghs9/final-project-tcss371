@@ -48,6 +48,7 @@ clean:
 	rm -rf $(DEPDIR) $(OBJDIR)
 	rm -f out.out
 	rm -f *.sym
+	rm -f *.obj
 
 
 and-run: compileAll
