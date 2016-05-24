@@ -17,16 +17,11 @@ Register cpu_alu_add(CPU_ALU_p alu) {
     return alu-> r = alu->a + alu->b;
 }
 
-int subtract() {
-
-    return 0;
+Register cpu_alu_and(CPU_ALU_p alu) {
+    return alu-> r = alu->a & alu->b;
 }
 
-int multiply() {
-    return 0;
-}
-
-int and() {
+int not(){
     return 0;
 }
 
