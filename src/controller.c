@@ -39,8 +39,6 @@ static Memory_s mem = { 0, 0 };
 int controller_main() {
     Register branch_taken_addr;
 
-    //Temp value, will get changed later.
-    //int instruction = 0;
     Instruction i;
     i.val = 0x1163;
 
@@ -117,6 +115,8 @@ int controller_main() {
             case OPCODE_JMP:
             case OPCODE_JSR:
             case OPCODE_LD:
+                //Register eff_add = cpu_get_reg(cpu,cpu_get_ir(cpu).pcoff9.rs)
+                //cpu_set_mar(cpu, Register val
                 //cpu->mar = cpu->reg_file[rs] + cpu->sext;   // compute effective address
                 break;
             case OPCODE_LDI:   // addresses of dest register already available
