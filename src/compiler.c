@@ -120,14 +120,16 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
   /* printf("-> "); */
 
   if (is_operation) {
-    char buf[9] = {0};
+    char *buf = 0;
 
     int j;
     for (i = 0; i < ntoks; i++) {
       if (!valid_operation(tokens[i]) &&
           !valid_directive(tokens[i]) &&
           (j = is_symbol(tokens[i], p))) {
+        buf = malloc(10);
         sprintf(buf, "x%04hX", (Register) (p->symbols[j - 1].addr - effective_line_on - 1));
+        free(tokens[i]);
         tokens[i] = buf;
       }
     }
@@ -181,7 +183,7 @@ int compile(const char *file_name_in) {
   }
 
   printf("Reading %s\n", file_name_in);
-  char file_name_out[100];
+  char file_name_out[100] = {0};
   char *fname_start_ext = strchr(file_name_in, '.');
   if (fname_start_ext) {
     int fname_end = fname_start_ext - file_name_in;
@@ -294,9 +296,10 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
           ntoks++;
         }
         finbf = eot + 1;
-      }
+      } // while (finbf < eos)
       if (ntoks == 1) {
         last_label = tokens[0];
+        ntoks = 0;
       } else {
         errors += line_call(ntoks, tokens, p, effective_line_on);
         effective_line_on++;
@@ -305,8 +308,10 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
       finbf = eol + 1;
       line_num++;
       int i;
-      for (i = 0; i < ntoks; i++)
-        free(tokens[i]);
+      for (i = 0; i < ntoks; i++) {
+        if (tokens[i])
+          free(tokens[i]);
+      }
     }
   }
   rewind(fin);
