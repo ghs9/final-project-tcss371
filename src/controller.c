@@ -38,6 +38,7 @@ static Memory_s mem = { 0, 0 };
 
 int controller_main() {
     Register branch_taken_addr;
+    Register effective_addr;
 
     Instruction i;
     i.val = 0x1163;
@@ -114,18 +115,24 @@ int controller_main() {
                 //check if Z N or p is 1. Compute
                 //PC + SEXT for the effective address?
                 break;
-            case OPCODE_JMP:
-            case OPCODE_JSR:
+            case OPCODE_JMP:    //Mar = BaseR
+                cpu_set_mar(cpu, cpu_get_ir(cpu).immed5.rs);
+                break;
+            case OPCODE_JSR:    //effective_addr = PC + SEXT
             case OPCODE_LD:
-                //Register eff_add = cpu_get_reg(cpu,cpu_get_ir(cpu).pcoff9.rs)
-                //cpu_set_mar(cpu, Register val
-                //cpu->mar = cpu->reg_file[rs] + cpu->sext;   // compute effective address
+                effective_addr = (cpu_get_pc(cpu) + cpu_get_sext(cpu));
+                cpu_set_mar(cpu, effective_addr);
                 break;
-            case OPCODE_LDI:   // addresses of dest register already available
+            case OPCODE_LDI:    //mar = mem[effective_addr = PC + SEXT]
+                effective_addr = (cpu_get_pc(cpu) + cpu_get_sext(cpu));
+                //cpu_set_mar(cpu, mem[effective_addr]);
                 break;
-            case OPCODE_LDR:
+            case OPCODE_LDR:    //effective_addr = BaseR + SEXT
+
+                break;
             case OPCODE_LEA:
-            case OPCODE_NOT:
+                //Same
+            case OPCODE_NOT:    // addresses of dest and src registers already available
                 break;
             case OPCODE_ST:
                 //cpu->mar = cpu->reg_file[rd] + cpu->sext; // compute effective address
@@ -175,13 +182,12 @@ int controller_main() {
             case OPCODE_JSR:
                 //PC = computed effective address
                 break;
-            case OPCODE_LD:
-                //Dr = mem[PC +SEXT]
-                //cpu->mdr = mem[cpu->mdr];
+            case OPCODE_LD:     //mdr gets mem[cpu- mar]
+                //cpu_set_mdr(cpu, mem[cpu_get_mar(cpu)]);
                 break;
             case OPCODE_LDI:
-                //Dr = mem[PC +SEXT]
-                //cpu->mdr = cpu->sext;
+                //Dr = mem[cpu->mar]
+                //cpu_set_mdr(cpu, mem[cpu_get_mar(cpu)]);
                 break;
             case OPCODE_LDR:
                 //Dr = mem[PC +SEXT]
@@ -217,23 +223,32 @@ int controller_main() {
                 cpu_alu_and(cpu_get_alu(cpu));
                 break;
             case OPCODE_BR:
+            case OPCODE_JSR:
+            case OPCODE_LEA:
+                //PC = computed effective address
                 break;
             case OPCODE_JMP:
-            case OPCODE_JSR:
+                //PC = BASER
+                break;
             case OPCODE_LD:
             case OPCODE_LDI:
-            case OPCODE_LDR:
-            case OPCODE_LEA:
+            case OPCODE_LDR:    //Reg[dr] = mdr
+                cpu_set_reg(cpu, cpu_get_ir(cpu).pcoff9.r, cpu_get_mdr(cpu));
                 break;
             case OPCODE_NOT:
-                //alu not(), store result in alu_r
+                cpu_alu_not(cpu_get_alu(cpu));
                 break;
             case OPCODE_ST:
-            case OPCODE_STI:
-            case OPCODE_TRAP:
             case OPCODE_STR:
+            case OPCODE_STI:
+                //MEmory [effective address] = SR
                 break;
-            }
+            case OPCODE_TRAP:
+                //R7 = pc
+                //Pc = mem[trapVect]
+                break;
+
+            }                //end switch
             state = STORE;
             break;
         case STORE:
@@ -244,6 +259,7 @@ int controller_main() {
             switch (OPC) {
             case OPCODE_ADD:
             case OPCODE_AND:
+            case OPCODE_NOT:
                 // We're using the immed5.rd to find the location,
                 // it should be the same value as the sr2.rd value.
                 cpu_set_reg(cpu, cpu_get_ir(cpu).immed5.rd,
@@ -254,10 +270,11 @@ int controller_main() {
             case OPCODE_JMP:
             case OPCODE_JSR:
             case OPCODE_LD:
+                break;
             case OPCODE_LDI:
             case OPCODE_LDR:
             case OPCODE_LEA:
-            case OPCODE_NOT:
+                break;
             case OPCODE_ST:
             case OPCODE_STI:
             case OPCODE_TRAP:
@@ -357,7 +374,8 @@ void mem_dump(Memory_p m) {
 
 void controller_menu() {
     printf("\n--- Paused CPU ---\n");
-    printf("Menu:\nq) Quit\np) Dump all\nu) Dump cpu\nm) Dump memory\nc) Continue\ns) Step\n");
+    printf(
+            "Menu:\nq) Quit\np) Dump all\nu) Dump cpu\nm) Dump memory\nc) Continue\ns) Step\n");
     char c;
     for (;;) {
         if (c != '\n' && c != '\r')

@@ -21,12 +21,8 @@ Register cpu_alu_and(CPU_ALU_p alu) {
     return alu-> r = alu->a & alu->b;
 }
 
-int not(){
-    return 0;
-}
-
-int nand() {
-    return 0;
+Register cpu_alu_not(CPU_ALU_p alu){
+    return alu-> r = ~(alu->a);
 }
 
 Register cpu_alu_set_a(CPU_ALU_p alu, Register value) {

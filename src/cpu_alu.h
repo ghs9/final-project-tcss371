@@ -16,6 +16,7 @@ void free_cpu_alu(CPU_ALU_p alu);
 
 Register cpu_alu_add(CPU_ALU_p alu);
 Register cpu_alu_and(CPU_ALU_p alu);
+Register cpu_alu_not(CPU_ALU_p alu);
 
 
 Register cpu_alu_set_a(CPU_ALU_p alu, Register value);
