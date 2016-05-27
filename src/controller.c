@@ -69,12 +69,12 @@ int controller_main() {
             switch (instruction_type(cpu_get_ir(cpu))) {
             case INS_IMMED5:
                 //Set SEXT for immed5
-                cpu_set_sext(cpu, i.immed5.immed);
+                cpu_set_sext(cpu, cpu_get_ir(cpu).immed5.immed);
 
                 break;
             case INS_IMMED6:
                 //Set SEXT for immed6
-                cpu_set_sext(cpu, i.offset6.offset);
+                cpu_set_sext(cpu, cpu_get_ir(cpu).offset6.offset);
 
                 break;
             case INS_RS2:
@@ -82,17 +82,17 @@ int controller_main() {
                 break;
             case INS_BR:
                 //Set SEXT for PCoffset9 in br
-                cpu_set_sext(cpu, i.br.pcoffset);
+                cpu_set_sext(cpu, cpu_get_ir(cpu).br.pcoffset);
 
                 break;
             case INS_PCOFF9:
                 //Set SEXT for PCoffset9
-                cpu_set_sext(cpu, i.pcoff9.pcoffset);
+                cpu_set_sext(cpu, cpu_get_ir(cpu).pcoff9.pcoffset);
 
                 break;
             case INS_PCOFF11:
                 //Set SEXT for PCoffset11
-                cpu_set_sext(cpu, i.pcoff11.pcoffset);
+                cpu_set_sext(cpu, cpu_get_ir(cpu).pcoff11.pcoffset);
 
                 break;
             case INS_VECT8:
@@ -120,26 +120,30 @@ int controller_main() {
                 break;
             case OPCODE_JSR:    //effective_addr = PC + SEXT
             case OPCODE_LD:
+            case OPCODE_LEA:
                 effective_addr = (cpu_get_pc(cpu) + cpu_get_sext(cpu));
                 cpu_set_mar(cpu, effective_addr);
                 break;
             case OPCODE_LDI:    //mar = mem[effective_addr = PC + SEXT]
                 effective_addr = (cpu_get_pc(cpu) + cpu_get_sext(cpu));
-                //cpu_set_mar(cpu, mem[effective_addr]);
+                cpu_set_mar(cpu, mem.mem[effective_addr]);
                 break;
             case OPCODE_LDR:    //effective_addr = BaseR + SEXT
-
+                effective_addr =
+                        (cpu_get_ir(cpu).offset6.rd + cpu_get_sext(cpu));
+                cpu_set_mar(cpu, mem.mem[effective_addr]);
                 break;
-            case OPCODE_LEA:
-                //Same
-            case OPCODE_NOT:    // addresses of dest and src registers already available
+            case OPCODE_NOT: // addresses of dest and src registers already available
                 break;
-            case OPCODE_ST:
-                //cpu->mar = cpu->reg_file[rd] + cpu->sext; // compute effective address
-                break;
+            case OPCODE_ST: // mem[PC + SEXT] = SR
             case OPCODE_STI:
-            case OPCODE_TRAP:
-            case OPCODE_STR:
+                //cpu->mar = cpu->reg_file[rd] + cpu->sext; // compute effective address
+                // cpu_set_mar(cpu,  cpu_get_reg(CPU_p cpu, Register which);
+                break;
+            case OPCODE_TRAP:   //mar = trapVect
+                cpu_set_mar(cpu, cpu_get_ir(cpu).vect8.vect);
+                break;
+            case OPCODE_STR:    // mem[BaseR + SEXT] = SR
                 break;
             }
 
@@ -173,42 +177,29 @@ int controller_main() {
                             cpu_get_reg(cpu, cpu_get_ir(cpu).rs2.rs2));
                 }            //end else
                 break;
-            case OPCODE_BR:
-                //PC = computed effective address
-                break;
+            case OPCODE_BR:     // mdr = mar
             case OPCODE_JMP:
-                //PC = BASER
-                break;
             case OPCODE_JSR:
-                //PC = computed effective address
+            case OPCODE_LEA:
+                cpu_set_mdr(cpu, cpu_get_mar(cpu));
                 break;
             case OPCODE_LD:     //mdr gets mem[cpu- mar]
-                //cpu_set_mdr(cpu, mem[cpu_get_mar(cpu)]);
-                break;
             case OPCODE_LDI:
-                //Dr = mem[cpu->mar]
-                //cpu_set_mdr(cpu, mem[cpu_get_mar(cpu)]);
-                break;
             case OPCODE_LDR:
-                //Dr = mem[PC +SEXT]
+                cpu_set_mdr(cpu, mem.mem[cpu_get_mar(cpu)]);
                 break;
-            case OPCODE_LEA:
-                //PC = computed effective address
             case OPCODE_NOT:
-                //ALU NOT operation
+                cpu_alu_set_a(cpu_get_alu(cpu),
+                        cpu_get_reg(cpu, cpu_get_ir(cpu).immed5.rs));
                 break;
-            case OPCODE_ST:
-                //MEmory [effective address] = SR
-                //cpu->mdr = cpu->reg_file[rs];
-                break;
+            case OPCODE_ST:     //Memory [effective address] = SR
             case OPCODE_STI:
+            case OPCODE_STR:
                 //MEmory [effective address] = SR
                 break;
             case OPCODE_TRAP:
                 //R7 = pc
                 //Pc = mem[trapVect]
-            case OPCODE_STR:
-                //MEmory [effective address] = SR
                 break;
             }
 
@@ -222,10 +213,10 @@ int controller_main() {
             case OPCODE_AND:
                 cpu_alu_and(cpu_get_alu(cpu));
                 break;
-            case OPCODE_BR:
+            case OPCODE_BR:     //PC = cpu->mdr
             case OPCODE_JSR:
             case OPCODE_LEA:
-                //PC = computed effective address
+                cpu_set_pc(cpu, cpu_get_mdr(cpu));
                 break;
             case OPCODE_JMP:
                 //PC = BASER
