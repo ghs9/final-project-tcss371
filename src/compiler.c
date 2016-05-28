@@ -36,6 +36,8 @@ typedef struct prog_t {
 
 void skip_whitespace(char **finbf_ptr, char *end);
 int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], Prog_p p, int effective_line_on));
+int output_symbols(const char *fname, Prog_p p);
+
 
 static const char *directives[] = {
   ".ORIG",
@@ -317,4 +319,28 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
   rewind(fin);
   free(fin_buf);
   return errors;
+}
+
+int output_symbols(const char *file_name_in, Prog_p p) {
+  char file_name_out[100] = {0};
+  char *fname_start_ext = strchr(file_name_in, '.');
+  if (fname_start_ext) {
+    int fname_end = fname_start_ext - file_name_in;
+    strncpy(file_name_out, file_name_in, fname_end);
+  } else {
+    strcpy(file_name_out, file_name_in);
+  }
+
+  sprintf(file_name_out + strlen(file_name_out), ".sym");
+  FILE *fout = fopen(file_name_out, "w");
+  if (!fout) {
+    printf("Failed to open '%s' for writing\n", file_name_out);
+    return -1;
+  }
+
+  fprintf(fout, "// Symbol table\n// Scope level 0:\n");
+  fprintf(fout, "//	Symbol Name       Page Address");
+  fprintf(fout, "//	----------------  ------------");
+
+  return 0;
 }

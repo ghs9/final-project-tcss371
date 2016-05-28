@@ -75,4 +75,11 @@ Register compile_instruction(int argc, char *argv[], int *error);
 int valid_operation(char *s);
 int instruction_to_opcode(char *s);
 
+#define SEXT_IMMED5     0xFFC0
+#define SEXT_OFFSET6    0xFFFF
+#define SEXT_PCOFF9     0xFFFF
+#define SEXT_PCOFF11    0xFFFF
+
+#define SEXT(x, c) (x < 0 ? x | c : x)
+
 #endif

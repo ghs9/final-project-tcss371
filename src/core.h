@@ -18,7 +18,7 @@ typedef struct cpu_alu_t CPU_ALU_s, *CPU_ALU_p;
 typedef struct cpu_t CPU_s, *CPU_p;
 
 typedef struct memory_t {
-  unsigned size;
+  int size;
   Register *mem;
 } Memory_s, *Memory_p;
 

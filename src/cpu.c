@@ -44,6 +44,7 @@ CPU_ALU_p cpu_get_alu(CPU_p cpu) {
 }
 
 Instruction cpu_set_ir(CPU_p cpu, Instruction i) {
+  //  printf("Set IR to " REG_PF "\n", i.val);
   return cpu->ir = i;
 }
 
@@ -60,6 +61,7 @@ Register cpu_get_mdr(CPU_p cpu) {
 }
 
 Register cpu_set_mar(CPU_p cpu, Register val) {
+  //  printf("Set MAR to " REG_PF "\n", val);
   return cpu->mar = val;
 }
 
@@ -80,6 +82,7 @@ Register cpu_get_reg(CPU_p cpu, Register which) {
 }
 
 Register cpu_set_pc(CPU_p cpu, Register val) {
+  //  printf("Set PC to " REG_PF "\n", val);
   return cpu->pc = val;
 }
 

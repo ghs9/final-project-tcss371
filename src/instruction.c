@@ -102,10 +102,10 @@ static const struct {
   {INSTRUCT_ST, OPCODE_ST},
   {INSTRUCT_STI, OPCODE_STI},
   {INSTRUCT_STR, OPCODE_STR},
-  {INSTRUCT_TRAP, OPCODE_TRAP},};
+  {INSTRUCT_TRAP, OPCODE_TRAP}};
 
 Register compile_instruction(int argc, char *argv[], int *error) {
-  Instruction i;
+  Instruction i = {.val = 0};
   i.opcode.opcode = instruction_to_opcode(argv[0]);
   if (i.opcode.opcode < 0) {
     *error = -1;
