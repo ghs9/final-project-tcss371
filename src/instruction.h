@@ -75,11 +75,15 @@ Register compile_instruction(int argc, char *argv[], int *error);
 int valid_operation(char *s);
 int instruction_to_opcode(char *s);
 
-#define SEXT_IMMED5     0xFFC0
-#define SEXT_OFFSET6    0xFFFF
-#define SEXT_PCOFF9     0xFFFF
-#define SEXT_PCOFF11    0xFFFF
+#define SEXTC_IMMED5     0xFFE0
+#define SEXTC_OFFSET6    0xFFC0
+#define SEXTC_PCOFF9     0xFE00
+#define SEXTC_PCOFF11    0xF800
 
-#define SEXT(x, c) (x < 0 ? x | c : x)
+#define SEXT(x, b, c) ((((Register) x) & (1 << (b-1))) ? ((Register) x) | c : x)
+#define SEXT_IMMED5(x)  SEXT(x, 5,  SEXTC_IMMED5)
+#define SEXT_OFFSET6(x) SEXT(x, 6,  SEXTC_OFFSET6)
+#define SEXT_PCOFF9(x)  SEXT(x, 9,  SEXTC_PCOFF9)
+#define SEXT_PCOFF11(x) SEXT(x, 11, SEXTC_PCOFF11)
 
 #endif

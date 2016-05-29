@@ -91,6 +91,10 @@ Register cpu_get_pc(CPU_p cpu) {
 }
 
 Register cpu_set_sw(CPU_p cpu, Register val) {
+  if (IS_REG_NEG(val))
+    val = -1;
+  else if (IS_REG_POS(val))
+    val = 1;
   return cpu->sw = val;
 }
 
