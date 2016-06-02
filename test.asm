@@ -1,6 +1,6 @@
     ;;                 Does stuff
 	.ORIG   x3000
-	AND     R2,R2,#0
+	AND     R2,R2,#0            ; sets counter to 0
     LEA     R3,PTR
 	TRAP    x23
 	LDR     R1,R3,#0

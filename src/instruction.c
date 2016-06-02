@@ -97,6 +97,7 @@ static const struct {
   {INSTRUCT_JSR, OPCODE_JSR},
   {INSTRUCT_LD, OPCODE_LD},
   {INSTRUCT_LDR, OPCODE_LDR},
+  {INSTRUCT_LDI, OPCODE_LDI},
   {INSTRUCT_LEA, OPCODE_LEA},
   {INSTRUCT_NOT, OPCODE_NOT},
   {INSTRUCT_ST, OPCODE_ST},
@@ -161,6 +162,7 @@ Register compile_instruction(int argc, char *argv[], int *error) {
     break;
   }
 
+  printf("%s: " REG_PF "\n", argv[-1], i.val);
   *error = 0;
   return i.val;
 }
@@ -234,9 +236,9 @@ int is_br_instruct(char *s) {
     for (i = 0; i < 4 && i + 2 < strlen(s); i++) {
       char c = s[i + 2];
       switch (c) {
-      case 'n': r |= 1 << 3; break;
-      case 'z': r |= 1 << 2; break;
-      case 'p': r |= 1 << 1; break;
+      case 'n': r |= (1 << 3); break;
+      case 'z': r |= (1 << 2); break;
+      case 'p': r |= (1 << 1); break;
       }
     }
   }

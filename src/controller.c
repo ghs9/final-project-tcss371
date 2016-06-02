@@ -278,10 +278,6 @@ int controller_execute() {
         break;
 
     case OPCODE_BR:
-        printf("At br, n(%d), z(%d), p(%d)\n",
-               cpu_get_ir(cpu).br.n,
-               cpu_get_ir(cpu).br.z,
-               cpu_get_ir(cpu).br.p);
         // If N, Z, or P = 1, then PC = MDR
         if ((cpu_get_ir(cpu).br.n &&
              IS_REG_NEG(cpu_get_sw(cpu))) ||
@@ -290,6 +286,11 @@ int controller_execute() {
             (cpu_get_ir(cpu).br.p &&
              IS_REG_POS(cpu_get_sw(cpu)))) {
             cpu_set_pc(cpu, cpu_get_mdr(cpu));
+            printf("n = %d, z = %d, p = %d, sw = %d\n",
+                   cpu_get_ir(cpu).br.n,
+                   cpu_get_ir(cpu).br.z,
+                   cpu_get_ir(cpu).br.p,
+                   cpu_get_sw(cpu));
         }
         break;
 
@@ -299,7 +300,9 @@ int controller_execute() {
         break;
 
     case OPCODE_NOT:
+        //printf(REG_PF " NOT = ", cpu_alu_get_a(cpu_get_alu(cpu)));
         cpu_alu_not(cpu_get_alu(cpu));
+        //printf(REG_PF "\n", cpu_alu_get_r(cpu_get_alu(cpu)));
         break;
 
     case OPCODE_LD:
@@ -385,7 +388,7 @@ int controller_execute() {
              * console.
              */
             printf("--- halting the LC-3 ---\n");
-            return 0;
+            return 1;
         default:
             printf("Should not be in default for TRAP\n");
             break;

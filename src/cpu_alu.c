@@ -14,15 +14,15 @@ struct cpu_alu_t {
 };
 
 Register cpu_alu_add(CPU_ALU_p alu) {
-    return alu-> r = alu->a + alu->b;
+    return alu->r = alu->a + alu->b;
 }
 
 Register cpu_alu_and(CPU_ALU_p alu) {
-    return alu-> r = alu->a & alu->b;
+    return alu->r = alu->a & alu->b;
 }
 
 Register cpu_alu_not(CPU_ALU_p alu){
-    return alu-> r = ~(alu->a);
+    return alu->r = ~(alu->a);
 }
 
 Register cpu_alu_set_a(CPU_ALU_p alu, Register value) {

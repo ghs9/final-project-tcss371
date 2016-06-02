@@ -13,8 +13,8 @@ typedef unsigned short Register;
 typedef unsigned short Bit;
 typedef unsigned short Byte;
 
-#define IS_REG_NEG(x) ((x & 0x8000) > 0)
-#define IS_REG_POS(x) ((x & 0xEFFF) > 0)
+#define IS_REG_NEG(x) ((x & 0x8000))
+#define IS_REG_POS(x) ((x & 0x7FFF))
 
 typedef union instruction_t Instruction, *Instruction_p;
 typedef struct cpu_alu_t CPU_ALU_s, *CPU_ALU_p;
