@@ -286,11 +286,11 @@ int controller_execute() {
             (cpu_get_ir(cpu).br.p &&
              IS_REG_POS(cpu_get_sw(cpu)))) {
             cpu_set_pc(cpu, cpu_get_mdr(cpu));
-            printf("n = %d, z = %d, p = %d, sw = %d\n",
-                   cpu_get_ir(cpu).br.n,
-                   cpu_get_ir(cpu).br.z,
-                   cpu_get_ir(cpu).br.p,
-                   cpu_get_sw(cpu));
+            /* printf("n = %d, z = %d, p = %d, sw = %d\n", */
+            /*        cpu_get_ir(cpu).br.n, */
+            /*        cpu_get_ir(cpu).br.z, */
+            /*        cpu_get_ir(cpu).br.p, */
+            /*        cpu_get_sw(cpu)); */
         }
         break;
 

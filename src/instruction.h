@@ -41,6 +41,7 @@ typedef union instruction_t {
   struct /* fmt_rs2 */ {
     Bit rs2       : 3;
     Bit pad       : 2;
+    Bit flag      : 1;
     Bit rs        : 3;
     Bit rd        : 3;
     Bit opcode    : 4;

@@ -78,6 +78,9 @@ int is_symbol(char *name, Prog_p p) {
 }
 
 int scan_symbols(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
+  if (ntoks == 0)
+    return 0;
+
   if (ntoks > 0 && valid_label(tokens[0])) {
     if (p->num_symbols > MAX_SYMBOLS) {
       printf("Too many labels in program (last = %s)\n", tokens[0]);
@@ -101,6 +104,9 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
   /* } */
   /* printf("\n"); */
   /* return 1; */
+
+  if (ntoks == 0)
+    return 0;
 
   if (is_symbol(tokens[0], p)) {
     //printf("OK symbol: %s\n", tokens[0]);
@@ -173,6 +179,9 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     }break;
     }
     //printf("%s is a directive\n", tokens[0]);
+  } else {
+    printf("Invalid operand %s\n", tokens[0]);
+    return -1;
   }
   return 0;
 }
@@ -269,8 +278,10 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
 
       while (finbf < eos) {
         skip_whitespace(&finbf, eos);
-        if (finbf >= eos)
-          goto lineEnd;
+        if (finbf >= eos) {
+          printf("finbf >= eos\n");
+          goto compileTokens;
+        }
 
         int in_quote = *finbf == '\"';
         if (in_quote)
@@ -295,25 +306,32 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
           }
           tokens[ntoks] = malloc(strlen(finbf) + 1);
           strcpy(tokens[ntoks], finbf);
+          // printf("Copied %s into %s\n", finbf, tokens[ntoks]);
           ntoks++;
         }
         finbf = eot + 1;
-      } // while (finbf < eos)
+      }
+    compileTokens:
       if (ntoks == 1) {
         last_label = tokens[0];
         ntoks = 0;
-      } else {
+        // printf("Added a last label %s\n", last_label);
+      } else if (ntoks > 0) {
         errors += line_call(ntoks, tokens, p, effective_line_on);
         effective_line_on++;
+        // printf("Compiled %s\n", tokens[0]);
       }
     lineEnd:
       finbf = eol + 1;
       line_num++;
       int i;
       for (i = 0; i < ntoks; i++) {
-        if (tokens[i])
+        if (tokens[i]) {
           free(tokens[i]);
+          tokens[i] = (void *)0xDEADBEEF;
+        }
       }
+      ntoks = 0;
     }
   }
   rewind(fin);

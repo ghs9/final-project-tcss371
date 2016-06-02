@@ -208,7 +208,7 @@ int instruction_to_opcode(char *s) {
   static const unsigned sz = sizeof(instructs) / sizeof(*instructs);
   unsigned j;
   if (is_br_instruct(s)) {
-    printf("Is BR: %s\n", s);
+    // printf("Is BR: %s\n", s);
     return OPCODE_BR;
   } else {
     for (j = 0; j < sz; j++) {
