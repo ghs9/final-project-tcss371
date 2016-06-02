@@ -162,7 +162,7 @@ Register compile_instruction(int argc, char *argv[], int *error) {
     break;
   }
 
-  printf("%s: " REG_PF "\n", argv[-1], i.val);
+  //printf("%s: " REG_PF "\n", argv[-1], i.val);
   *error = 0;
   return i.val;
 }

@@ -1,8 +1,7 @@
 # TCSS 371, Spring 2016
 # Project 5
 # Viveret Steele
-# Ver. 2016/5/12, 12:13pm
-
+# Ver. 2016/6/2, 12:23pm
 
 ## C Compiler
 CC=gcc
@@ -18,12 +17,16 @@ PROG_NAME=out.out
 
 # Where source files are located
 SRCDIR=src
+ASMSRCDIR=$(SRCDIR)-asm
 SRC=$(wildcard $(SRCDIR)/*.c)
+ASMSRC=$(wildcard $(ASMSRCDIR)/*.asm)
 
 # Where object files are stored
 OBJDIR := obj
-$(shell mkdir -p $(OBJDIR))
+ASMOBJDIR := $(OBJDIR)-asm
+$(shell mkdir -p $(OBJDIR) $(ASMOBJDIR))
 OBJ=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRC))
+ASMOBJ=$(patsubst $(ASMSRCDIR)/%.asm,$(ASMOBJDIR)/%.obj,$(ASMSRC))
 
 # Where dependency files are stored
 DEPDIR := $(OBJDIR)
@@ -31,9 +34,11 @@ $(shell mkdir -p $(DEPDIR))
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
-ASSEMLY=$(wildcard *.asm)
 
-compileAll: $(OBJ) $(ASSEMBLY)
+compileAll: compileSim compileAsm
+
+compileSim: $(OBJ)
+$(PROG_NAME): $(OBJ)
 	$(CC) $(OBJ) -o $(PROG_NAME)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
@@ -44,12 +49,14 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPDIR)/%.d
 $(DEPDIR)/%.d: ;
 .PRECIOUS: $(DEPDIR)/%.d
 
-clean:
-	rm -rf $(DEPDIR) $(OBJDIR)
-	rm -f out.out
-	rm -f *.sym
-	rm -f *.obj
+compileAsm: $(PROG_NAME) $(ASMOBJ)
 
+$(ASMOBJDIR)/%.obj: $(ASMSRCDIR)/%.asm
+	./$(PROG_NAME) -c $< -o $@
+
+clean:
+	rm -rf $(DEPDIR) $(OBJDIR) $(ASMOBJDIR)
+	rm -f out.out
 
 and-run: compileAll
 	./$(PROG_NAME)

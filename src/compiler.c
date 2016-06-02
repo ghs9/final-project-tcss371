@@ -186,25 +186,31 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
   return 0;
 }
 
-int compile(const char *file_name_in) {
+int compile(const char *file_name_in, const char *file_name_out) {
   FILE *fin = fopen(file_name_in, "r");
+  FILE *fout = 0;
   if (!fin) {
     printf("Failed to open '%s' for reading\n", file_name_in);
     return -1;
   }
 
-  printf("Reading %s\n", file_name_in);
-  char file_name_out[100] = {0};
-  char *fname_start_ext = strchr(file_name_in, '.');
-  if (fname_start_ext) {
-    int fname_end = fname_start_ext - file_name_in;
-    strncpy(file_name_out, file_name_in, fname_end);
+  // printf("Reading %s\n", file_name_in);
+
+  if (file_name_out) {
+    fout = fopen(file_name_out, "w");
   } else {
-    strcpy(file_name_out, file_name_in);
+    char file_name_out_bf[100] = {0};
+    char *fname_start_ext = strchr(file_name_in, '.');
+    if (fname_start_ext) {
+      int fname_end = fname_start_ext - file_name_in;
+      strncpy(file_name_out_bf, file_name_in, fname_end);
+    } else {
+      strcpy(file_name_out_bf, file_name_in);
+    }
+    sprintf(file_name_out_bf + strlen(file_name_out_bf), ".obj");
+    fout = fopen(file_name_out_bf, "wb");
   }
 
-  sprintf(file_name_out + strlen(file_name_out), ".obj");
-  FILE *fout = fopen(file_name_out, "wb");
   if (!fout) {
     printf("Failed to open '%s' for writing\n", file_name_out);
     return -1;
@@ -279,7 +285,7 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
       while (finbf < eos) {
         skip_whitespace(&finbf, eos);
         if (finbf >= eos) {
-          printf("finbf >= eos\n");
+          // printf("finbf >= eos\n");
           goto compileTokens;
         }
 

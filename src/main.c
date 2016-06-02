@@ -21,7 +21,10 @@ int main(int argc, char *argv[]) {
              err);
       return 0;
     } else if (argc > 2 && strcmp(argv[1], "-c") == 0) {
-      return compile(argv[2]);
+      if (argc > 4 && strcmp(argv[3], "-o") == 0)
+        return compile(argv[2], argv[4]);
+      else
+        return compile(argv[2], 0);
     } else {
       signal(SIGINT, controller_signal);
       return controller_main_prog(argv[1]);
