@@ -27,11 +27,11 @@ int main(int argc, char *argv[]) {
         return compile(argv[2], 0);
     } else {
       signal(SIGINT, controller_signal);
-      return controller_main_prog(argv[1]);
+      return controller_driver_prog(argv[1]);
     }
   } else {
     signal(SIGINT, controller_signal);
-    return controller_main_default();
+    return controller_driver_default();
     /* printf("No input specified. For usage, use -h.\n"); */
     /* return 0; */
   }

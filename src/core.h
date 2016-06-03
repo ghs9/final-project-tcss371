@@ -25,4 +25,9 @@ typedef struct memory_t {
   Register *mem;
 } Memory_s, *Memory_p;
 
+typedef struct vm_state_t {
+  CPU_p cpu;
+  Memory_s mem;
+} VM_State_s, *VM_State_p;
+
 #endif

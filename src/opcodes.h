@@ -40,14 +40,19 @@
 #define INSTRUCT_TRAP "TRAP"
 #define INSTRUCT_STR  "STR"
 
-#define TRAP_GETC     0
-#define TRAP_OUT      1
-#define TRAP_PUTS     2
-#define TRAP_HALT     3
+#define TRAP_GETC     0x20
+#define TRAP_OUT      0x21
+#define TRAP_PUTS     0x22
+#define TRAP_IN       0x23
+#define TRAP_PUTSP    0x24
+#define TRAP_HALT     0x25
 
 #define INSTRUCT_TRAP_GETC     "GETC"
 #define INSTRUCT_TRAP_OUT      "OUT"
 #define INSTRUCT_TRAP_PUTS     "PUTS"
 #define INSTRUCT_TRAP_HALT     "HALT"
+#define INSTRUCT_TRAP_IN       "IN"
+#define INSTRUCT_TRAP_PUTSP    "PUTSP"
+
 
 #endif

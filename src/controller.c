@@ -9,35 +9,24 @@
 #include "cpu_all.h"
 #include "controller.h"
 #include "opcodes.h"
-#include "util.h"
 #include <signal.h>
 
-#define DEFAULT_MEM_SIZE 0x4000 // take into account +0x3000 offset (.ORIG)
 
 /********    STATES    *******/
-#define FETCH       0
-#define DECODE      1
-#define EVAL_ADDR   2
-#define FETCH_OP    3
-#define EXECUTE     4
-#define STORE       5
-
-#define NUM_COL 8
-#define NUM_ROW 20
-void mem_dump(Memory_p m, int loc);
-void controller_menu();
-
-#define OPCODE cpu_get_ir(cpu).opcode.opcode
-#define OPTYPE instruction_type(cpu_get_ir(cpu))
+#define FETCH         0
+#define DECODE        1
+#define EVAL_ADDR     2
+#define FETCH_OP      3
+#define EXECUTE       4
+#define STORE         5
 
 #define CTRLR_DONE    0
 #define CTRLR_RUNNING 1
 #define CTRLR_MENU    2
 
-static int CONTROLLER_STATE = FETCH;
-static int CONTROLLER_MAIN_STATE = CTRLR_RUNNING;
-static CPU_p cpu;
-static Memory_s mem = { 0, 0 };
+#define NUM_COL       8
+#define NUM_ROW       20
+
 
 int controller_fetch();
 int controller_decode();
@@ -46,9 +35,24 @@ int controller_fetch_op();
 int controller_execute();
 int controller_store();
 
-int controller_main() {
-    CONTROLLER_MAIN_STATE = CTRLR_MENU;
+void controller_menu();
+void mem_dump(Memory_p m, int loc);
+int is_out_of_bounds(int i);
+
+
+#define OPCODE cpu_get_ir(cpu).opcode.opcode
+#define OPTYPE instruction_type(cpu_get_ir(cpu))
+
+static int CONTROLLER_STATE = FETCH;
+static int CONTROLLER_MAIN_STATE = CTRLR_MENU; // CTRLR_RUNNING;
+static CPU_p cpu = 0;
+static Memory_p mem = 0;
+
+int controller_main(VM_State_p vms) {
+    cpu = vms->cpu;
+    mem = &vms->mem;
     int ret = 0;
+
     while (CONTROLLER_MAIN_STATE != CTRLR_DONE) {
         if (CONTROLLER_MAIN_STATE == CTRLR_MENU)
             controller_menu();
@@ -59,26 +63,33 @@ int controller_main() {
             if ((ret = controller_fetch()) != 0)
                 return ret;
             break;
-        case DECODE: // Gets the instruction type and sets the SEXT accordingly.
-            CONTROLLER_STATE = EVAL_ADDR; // Next step is to calculate the effective addr
+
+        case DECODE:
+            // Gets the instruction type and sets the SEXT accordingly.
+            // Next step is to calculate the effective addr
+            CONTROLLER_STATE = EVAL_ADDR;
             if ((ret = controller_decode()) != 0)
                 return ret;
             break;
+
         case EVAL_ADDR: // Compute effective address
             CONTROLLER_STATE = FETCH_OP;
             if ((ret = controller_eval_addr()) != 0)
                 return ret;
             break;
+
         case FETCH_OP:
             CONTROLLER_STATE = EXECUTE;
             if ((ret = controller_fetch_op()) != 0)
                 return ret;
             break;
+
         case EXECUTE:
             CONTROLLER_STATE = STORE;
             if ((ret = controller_execute()) != 0)
                 return ret;
             break;
+
         case STORE:
             CONTROLLER_STATE = FETCH;
             if ((ret = controller_store()) != 0)
@@ -86,49 +97,41 @@ int controller_main() {
             break;
         }
     }
-    return 0;
+
+    cpu = 0;
+    mem = 0;
+    return ret;
 }
 
 int controller_fetch() {
-    if (cpu_get_pc(cpu) >= mem.size) {
-        printf("ERROR: mem[PC] overflow\n");
-        mem_dump(&mem, cpu_get_pc(cpu));
-        cpu_dump(cpu);
+    if (is_out_of_bounds(cpu_get_pc(cpu)))
         return -1;
-    }
-
-    //Sets MAR to PC.
+    // Sets MAR to PC.
     cpu_set_mar(cpu, cpu_get_pc(cpu));
-    //increment PC
+    // Increment PC
     cpu_set_pc(cpu, cpu_get_pc(cpu) + 1);
-    //Set IR to equal mem[MAR]
+    // Set IR to equal mem[MAR]
     cpu_set_ir(cpu, (Instruction) {.val =
-                mem.mem[cpu_get_mar(cpu)]});
-
+                mem->mem[cpu_get_mar(cpu)]});
     return 0;
 }
 
 int controller_decode() {
     switch (OPTYPE) {
     case INS_IMMED5:
-        //Set SEXT for immed5
         cpu_set_sext(cpu, SEXT_IMMED5(cpu_get_ir(cpu).immed5.immed));
         break;
     case INS_IMMED6:
-        //Set SEXT for immed6
-        // TODO: Check if offset needs sext
         cpu_set_sext(cpu, SEXT_OFFSET6(cpu_get_ir(cpu).offset6.offset));
         break;
     case INS_RS2:
-        //No SEXT for RS
+        // No SEXT for RS2
         break;
     case INS_BR:
     case INS_PCOFF9:
-        //Set SEXT for PCoffset9
         cpu_set_sext(cpu, SEXT_PCOFF9(cpu_get_ir(cpu).pcoff9.pcoffset));
         break;
     case INS_PCOFF11:
-        //Set SEXT for PCoffset11
         cpu_set_sext(cpu, SEXT_PCOFF11(cpu_get_ir(cpu).pcoff11.pcoffset));
         break;
     case INS_VECT8:
@@ -136,8 +139,8 @@ int controller_decode() {
         // AKA: Do nothing, default C behavior.
         break;
     default:
-        printf("Should not be in default for DECODE\n");
-        break;
+        printf("Invalid DECODE\n");
+        return -1;
     }
 
     return 0;
@@ -145,9 +148,10 @@ int controller_decode() {
 
 int controller_eval_addr() {
     switch (OPCODE) {
-    case OPCODE_ADD:    // Do nothing
-    case OPCODE_AND:    // Do nothing
-    case OPCODE_NOT:    // Do nothing
+    case OPCODE_ADD:
+    case OPCODE_AND:
+    case OPCODE_NOT:
+        // Do nothing
         cpu_set_mar(cpu, cpu_get_pc(cpu));
         break;
 
@@ -163,13 +167,9 @@ int controller_eval_addr() {
         break;
 
     case OPCODE_LDI:    // MAR = mem[effective_addr = PC + SEXT]
-        if (cpu_get_pc(cpu) + cpu_get_sext(cpu) >= mem.size) {
-            printf("ERROR: mem[PC] overflow\n");
-            mem_dump(&mem, cpu_get_pc(cpu));
-            cpu_dump(cpu);
+        if (is_out_of_bounds(cpu_get_pc(cpu) + cpu_get_sext(cpu)))
             return -1;
-        }
-        cpu_set_mar(cpu, mem.mem[cpu_get_pc(cpu) + cpu_get_sext(cpu)]);
+        cpu_set_mar(cpu, mem->mem[cpu_get_pc(cpu) + cpu_get_sext(cpu)]);
         break;
 
     case OPCODE_LDR:    // effective_addr = BaseR + SEXT
@@ -204,7 +204,6 @@ int controller_fetch_op() {
     // get operands out of registers into A, B of ALU
     // or get memory for load instr.
     switch (OPCODE) {
-        // Add and And both load the same bit values into the ALU.
     case OPCODE_ADD:
     case OPCODE_AND:
         // If the flag at bit[5] is not zero, then
@@ -239,13 +238,9 @@ int controller_fetch_op() {
     case OPCODE_LD:     // MDR = mem[MAR]
     case OPCODE_LDI:
     case OPCODE_LDR:
-        if (cpu_get_mar(cpu) >= mem.size) {
-            printf("ERROR: mem[PC] overflow\n");
-            mem_dump(&mem, cpu_get_pc(cpu));
-            cpu_dump(cpu);
+        if (is_out_of_bounds(cpu_get_mar(cpu)))
             return -1;
-        }
-        cpu_set_mdr(cpu, mem.mem[cpu_get_mar(cpu)]);
+        cpu_set_mdr(cpu, mem->mem[cpu_get_mar(cpu)]);
         break;
 
     case OPCODE_NOT:
@@ -254,14 +249,15 @@ int controller_fetch_op() {
         break;
 
     case OPCODE_TRAP:
-        // R7 = pc
         cpu_set_reg(cpu, 7, cpu_get_pc(cpu));
-        // Pc = mem[trapVect]
-        cpu_set_pc(cpu, mem.mem[cpu_get_mar(cpu)]);
+        if (is_out_of_bounds(cpu_get_mar(cpu)))
+            return -1;
+        cpu_set_pc(cpu, mem->mem[cpu_get_mar(cpu)]);
         break;
+
     default:
-        printf("Should not be in default for FETCH OP\n");
-        break;
+        printf("Invalid FETCH OP\n");
+        return -1;
     }
 
     return 0;
@@ -286,11 +282,6 @@ int controller_execute() {
             (cpu_get_ir(cpu).br.p &&
              IS_REG_POS(cpu_get_sw(cpu)))) {
             cpu_set_pc(cpu, cpu_get_mdr(cpu));
-            /* printf("n = %d, z = %d, p = %d, sw = %d\n", */
-            /*        cpu_get_ir(cpu).br.n, */
-            /*        cpu_get_ir(cpu).br.z, */
-            /*        cpu_get_ir(cpu).br.p, */
-            /*        cpu_get_sw(cpu)); */
         }
         break;
 
@@ -300,28 +291,21 @@ int controller_execute() {
         break;
 
     case OPCODE_NOT:
-        //printf(REG_PF " NOT = ", cpu_alu_get_a(cpu_get_alu(cpu)));
         cpu_alu_not(cpu_get_alu(cpu));
-        //printf(REG_PF "\n", cpu_alu_get_r(cpu_get_alu(cpu)));
-        break;
-
-    case OPCODE_LD:
-    case OPCODE_LEA:
-    case OPCODE_LDI:
-    case OPCODE_LDR:
-        // do nothing;
         break;
 
     case OPCODE_ST:     // Memory[MAR] = SR
     case OPCODE_STR:
     case OPCODE_STI:
-        mem.mem[cpu_get_mdr(cpu)] =
+        if (is_out_of_bounds(cpu_get_mdr(cpu)))
+            return -1;
+        mem->mem[cpu_get_mdr(cpu)] =
             cpu_get_reg(cpu, cpu_get_ir(cpu).pcoff9.r);
         break;
 
     case OPCODE_TRAP:
         switch (cpu_get_pc(cpu)) {
-        case 0x20: { /* GETC */
+        case TRAP_GETC: { /* GETC */
             /* Read a single character from the keyboard. The
              * character is not echoed onto the console. Its
              * ASCII code is copied into R0. The high eight
@@ -332,13 +316,13 @@ int controller_execute() {
             scanf(" %c", &c);
             cpu_set_reg(cpu, 0, c);
         } break;
-        case 0x21: /* OUT */
+        case TRAP_OUT:
             /* Write a character in R0[7:0] to the console
              * display.
              */
             printf("%c\n", (char) cpu_get_reg(cpu, 0));
             break;
-        case 0x22: { /* PUTS */
+        case TRAP_PUTS: {
             /* Write a string of ASCII characters to the
              * console display. The characters are contained
              * in consecutive memory locations, one character
@@ -346,11 +330,13 @@ int controller_execute() {
              * specified in R0. Writing terminates with the
              * occurrence of x0000 in a memory location.
              */
-            Register *s = &mem.mem[cpu_get_reg(cpu, 0)];
+            if (is_out_of_bounds(cpu_get_reg(cpu, 0)))
+                return -1;
+            Register *s = &mem->mem[cpu_get_reg(cpu, 0)];
             while (*(s++))
                 printf("%c", *s);
         } break;
-        case 0x23: { /* IN */
+        case TRAP_IN: {
             /* Print a prompt on the screen and read a single
              * character from the keyboard. The character is
              * echoed onto the console monitor, and its ASCII
@@ -362,7 +348,7 @@ int controller_execute() {
             scanf(" %c", &c);
             cpu_set_reg(cpu, 0, c);
         } break;
-        case 0x24: { /* PUTSP */
+        case TRAP_PUTSP: {
             /* Write a string of ASCII characters to the
              * console. The characters are contained in
              * consecutive memory locations, two characters
@@ -379,24 +365,34 @@ int controller_execute() {
              * terminates with the occurrence of x0000 in a
              * memory location.
              */
-            char *s = (char *) &mem.mem[cpu_get_reg(cpu, 0)];
+            if (is_out_of_bounds(cpu_get_reg(cpu, 0)))
+                return -1;
+            char *s = (char *) &mem->mem[cpu_get_reg(cpu, 0)];
             while (*(s++))
                 printf("%c", *s);
         } break;
-        case 0x25: /* HALT */
+        case TRAP_HALT:
             /* Halt execution and print a message on the
              * console.
              */
             printf("--- halting the LC-3 ---\n");
             return 1;
         default:
-            printf("Should not be in default for TRAP\n");
-            break;
+            printf("Invalid trap signal " REG_PF "\n", cpu_get_pc(cpu));
+            return -1;
         }
         break;
-    default:
-        printf("Should not be in default for EXECUTE\n");
+
+    case OPCODE_LD:
+    case OPCODE_LEA:
+    case OPCODE_LDI:
+    case OPCODE_LDR:
+        // do nothing;
         break;
+
+    default:
+        printf("Invalid EXECUTE\n");
+        return -1;
     }
 
     return 0;
@@ -427,90 +423,21 @@ int controller_store() {
         cpu_set_sw(cpu, cpu_get_mdr(cpu));
         break;
 
-    case OPCODE_BR:     // Do nothing
+    case OPCODE_BR:
     case OPCODE_JMP:
     case OPCODE_JSR:
     case OPCODE_ST:
     case OPCODE_STI:
     case OPCODE_STR:
-        // TODO: Remove this stub as it is unecessary
+        // Do nothing
         break;
 
     default:
-        printf("Should not be in default for STORE\n");
-        break;
+        printf("Invalid STORE\n");
+        return -1;
     }
 
     return 0;
-}
-
-int controller_main_default() {
-    mem.size = DEFAULT_MEM_SIZE;
-    mem.mem = calloc(1, DEFAULT_MEM_SIZE);
-    apply_os(&mem);
-    cpu = malloc_cpu();
-    int r = controller_main();
-    free_cpu(cpu);
-    free(mem.mem);
-    return r;
-}
-
-int controller_main_prog(const char *prog_name) {
-    FILE *fin = fopen(prog_name, "rb");
-    if (!fin) {
-        printf("Failed to open program file %s\n", prog_name);
-        return -1;
-    }
-
-    fseek(fin, 0L, SEEK_END);
-    int prog_size = ftell(fin) - sizeof(Register);
-    mem.size = prog_size / sizeof(Register);
-    rewind(fin);
-    /* if (mem.size < DEFAULT_MEM_SIZE) */
-    /*     mem.size = DEFAULT_MEM_SIZE; */
-
-    // Find out start address
-    Register start_addr;
-    size_t ret = fread(&start_addr, sizeof(start_addr), 1, fin);
-    if (!ret) {
-        printf("Could not read start addr from program file %s\n", prog_name);
-        fclose(fin);
-        return -1;
-    }
-
-    swap_endian(&start_addr, sizeof(start_addr), 1);
-    // printf("Start addr = " REG_PF "\n", start_addr);
-    mem.size += start_addr + 1000;
-    if (mem.size % 8 != 0)
-        mem.size += mem.size % 8;
-
-    mem.mem = calloc(1, mem.size * sizeof(Register));
-    if (!mem.mem) {
-        printf("Could not malloc mem\n");
-        fclose(fin);
-        return -1;
-    }
-    apply_os(&mem);
-
-    // Load program into memory
-    ret = fread(&mem.mem[start_addr], prog_size, 1, fin);
-    if (!ret) {
-        printf("Could not read from program file %s\n", prog_name);
-        free(mem.mem);
-        fclose(fin);
-        return -1;
-    }
-    fclose(fin);
-    swap_endian(&mem.mem[start_addr], sizeof(Register),
-                prog_size / sizeof(Register));
-
-    cpu = malloc_cpu();
-    cpu_set_pc(cpu, start_addr);
-    int r = controller_main();
-
-    free_cpu(cpu);
-    free(mem.mem);
-    return r;
 }
 
 void controller_signal(int v) {
@@ -523,19 +450,19 @@ void mem_dump(Memory_p m, int loc) {
     int r, c, i;
     for (r = -NUM_ROW / 2; r < NUM_ROW / 2; r++) {
         i = r * NUM_COL + loc;
-        if (i < 0 || i >= mem.size)
+        if (i < 0 || i >= mem->size)
             continue;
 
         printf(REG_PF ">", i);
         for (c = 0; c < NUM_COL; c++) {
             i = r * NUM_COL + c + loc;
-            if (i < 0 || i >= mem.size)
+            if (i < 0 || i >= mem->size)
                 continue;
             else
                 printf(" " REG_PF, m->mem[i]);
         }
         printf("\n");
-        if (i >= mem.size)
+        if (i >= mem->size)
             break;
     }
     printf("Mem sz: " REG_PF " (" INT_PF " bytes)\n", m->size,
@@ -557,9 +484,9 @@ void controller_menu() {
         } else if (c == 'u') {
             cpu_dump(cpu);
         } else if (c == 'm') {
-            mem_dump(&mem, cpu_get_mar(cpu));
+            mem_dump(mem, cpu_get_mar(cpu));
         } else if (c == 'p') {
-            mem_dump(&mem, cpu_get_mar(cpu));
+            mem_dump(mem, cpu_get_mar(cpu));
             cpu_dump(cpu);
         } else if (c == 'c') {
             break;
@@ -575,8 +502,20 @@ void controller_menu() {
 }
 
 void apply_os(Memory_p m) {
-    // Set trap addrs to same addr
+    // Set trap addrs to same addr because we don't actually jump to
+    // LC3 code to execute.
     int i;
     for (i = 0; i < 0xFF; i++)
         m->mem[i] = i;
+}
+
+int is_out_of_bounds(int i) {
+    if (i >= mem->size) {
+        printf("ERROR: mem[PC] overflow (" REG_PF " >= " REG_PF ")\n",
+               i, mem->size);
+        mem_dump(mem, cpu_get_pc(cpu));
+        cpu_dump(cpu);
+        return 1;
+    }
+    return 0;
 }
