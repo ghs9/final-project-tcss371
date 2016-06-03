@@ -1,3 +1,11 @@
+/**
+ * controller.h - CPU and ALU simulator.
+ * TCSS 371, Spring 2016
+ * Final Project
+ * Viveret Steele (viveret@uw.edu)
+ * Amy Irving
+ */
+
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 

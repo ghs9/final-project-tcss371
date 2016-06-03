@@ -1,3 +1,11 @@
+/**
+ * core.h - CPU and ALU simulator.
+ * TCSS 371, Spring 2016
+ * Final Project
+ * Viveret Steele (viveret@uw.edu)
+ * Amy Irving
+ */
+
 #ifndef CORE_H
 #define CORE_H
 
@@ -7,7 +15,6 @@
 
 #define REG_PF "0x%04hX"
 #define INT_PF "%4d"
-
 
 typedef unsigned short Register;
 typedef unsigned short Bit;

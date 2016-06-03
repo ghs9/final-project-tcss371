@@ -5,10 +5,11 @@
  * Viveret Steele (viveret@uw.edu)
  * Amy Irving
  *
- * Doesn't currently free memory when appropriate,
- * And has a few hacky parts but its relatively
+ * Currently does not support Windows line endings,
+ * does not quite calculate labels correctly,
+ * and has a few hacky parts, but its relatively
  * Bug free and translates assembly to the LC3
- * Exactly how 'lc3as' would.
+ * Exactly how 'lc3as' would for simple programs.
  */
 
 #include "compiler.h"
@@ -69,11 +70,6 @@ int is_symbol(char *name, Prog_p p) {
     }
   }
 
-  /* printf("%d (%s)\n", p->num_symbols, name); */
-  /* int j; */
-  /* for (j = 0; j < p->num_symbols; j++) { */
-  /*   printf("%d) = %s -> %d\n", j, p->symbols[j].name, p->symbols[j].addr); */
-  /* } */
   return 0;
 }
 
@@ -99,17 +95,11 @@ int scan_symbols(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
 
 int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
   int i;
-  /* for (i = 0; i < ntoks; i++) { */
-  /*   printf("%s (%d)", tokens[i], strlen(tokens[i])); */
-  /* } */
-  /* printf("\n"); */
-  /* return 1; */
 
   if (ntoks == 0)
     return 0;
 
   if (is_symbol(tokens[0], p)) {
-    //printf("OK symbol: %s\n", tokens[0]);
     tokens ++;
     ntoks --;
   }
@@ -121,11 +111,6 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     printf("Invalid token %s\n", tokens[0]);
     return 1;
   }
-
-  /* for (i = 0; i < ntoks; i++) { */
-  /*   printf("%s ", tokens[i]); */
-  /* } */
-  /* printf("-> "); */
 
   if (is_operation) {
     char *buf = 0;
@@ -146,8 +131,7 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
     Instruction ins = {.val = compile_instruction(ntoks, tokens, &err)};
     if (err)
       return err;
-    /* instruction_dump(ins); */
-    /* printf("\n\n"); */
+
     p->img[p->sz] = ins.val;
     p->sz++;
   } else if (is_directive) {
@@ -158,7 +142,6 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
       p->start_addr = str_toi(tokens[1], &err);
       if (err)
         return 1;
-      /* printf("Start addr = 0x%X\n", p->start_addr); */
       p->img[0] = p->start_addr;
       p->sz = 1;
       break;
@@ -178,7 +161,6 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
       p->sz ++;
     }break;
     }
-    //printf("%s is a directive\n", tokens[0]);
   } else {
     printf("Invalid operand %s\n", tokens[0]);
     return -1;
@@ -189,28 +171,29 @@ int create_img(int ntoks, char *tokens[], Prog_p p, int effective_line_on) {
 int compile(const char *file_name_in, const char *file_name_out) {
   FILE *fin = fopen(file_name_in, "r");
   FILE *fout = 0;
+  char *used_file_name_out = 0;
   if (!fin) {
     printf("Failed to open '%s' for reading\n", file_name_in);
     return -1;
   }
 
-  // printf("Reading %s\n", file_name_in);
-
   if (file_name_out) {
-    fout = fopen(file_name_out, "w");
+    used_file_name_out = malloc(strlen(file_name_out));
+    strcpy(used_file_name_out, file_name_out);
   } else {
-    char file_name_out_bf[100] = {0};
     char *fname_start_ext = strchr(file_name_in, '.');
     if (fname_start_ext) {
       int fname_end = fname_start_ext - file_name_in;
-      strncpy(file_name_out_bf, file_name_in, fname_end);
+      used_file_name_out = calloc(1, fname_end + 5);
+      strncpy(used_file_name_out, file_name_in, fname_end);
     } else {
-      strcpy(file_name_out_bf, file_name_in);
+      used_file_name_out = malloc(strlen(file_name_in) + 5);
+      strcpy(used_file_name_out, file_name_in);
     }
-    sprintf(file_name_out_bf + strlen(file_name_out_bf), ".obj");
-    fout = fopen(file_name_out_bf, "wb");
+    sprintf(used_file_name_out + strlen(used_file_name_out), ".obj");
   }
 
+  fout = fopen(used_file_name_out, "wb");
   if (!fout) {
     printf("Failed to open '%s' for writing\n", file_name_out);
     return -1;
@@ -221,6 +204,7 @@ int compile(const char *file_name_in, const char *file_name_out) {
   p.img = calloc(1, MAX_IMG_SIZE * sizeof(Register));
 
   int ret;
+
   /* pass 1 - calculate symbol addresses / table */
   printf("Starting Pass 1...\n");
   ret = scan_file(fin, &p, scan_symbols);
@@ -239,6 +223,8 @@ int compile(const char *file_name_in, const char *file_name_out) {
   fwrite(p.img, p.sz * sizeof(*p.img), 1, fout);
   free(p.img);
 
+  output_symbols(used_file_name_out, &p);
+  free(used_file_name_out);
   return 0;
 }
 
@@ -277,17 +263,14 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
       int ntoks = 0;
       if (last_label) {
         tokens[0] = last_label;
-        // printf("last label = %s\n", last_label);
         last_label = 0;
         ntoks ++;
       }
 
       while (finbf < eos) {
         skip_whitespace(&finbf, eos);
-        if (finbf >= eos) {
-          // printf("finbf >= eos\n");
+        if (finbf >= eos)
           goto compileTokens;
-        }
 
         int in_quote = *finbf == '\"';
         if (in_quote)
@@ -312,7 +295,6 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
           }
           tokens[ntoks] = malloc(strlen(finbf) + 1);
           strcpy(tokens[ntoks], finbf);
-          // printf("Copied %s into %s\n", finbf, tokens[ntoks]);
           ntoks++;
         }
         finbf = eot + 1;
@@ -321,11 +303,9 @@ int scan_file(FILE *fin, Prog_p p, int (*line_call)(int ntoks, char *tokens[], P
       if (ntoks == 1) {
         last_label = tokens[0];
         ntoks = 0;
-        // printf("Added a last label %s\n", last_label);
       } else if (ntoks > 0) {
         errors += line_call(ntoks, tokens, p, effective_line_on);
         effective_line_on++;
-        // printf("Compiled %s\n", tokens[0]);
       }
     lineEnd:
       finbf = eol + 1;
@@ -363,8 +343,13 @@ int output_symbols(const char *file_name_in, Prog_p p) {
   }
 
   fprintf(fout, "// Symbol table\n// Scope level 0:\n");
-  fprintf(fout, "//	Symbol Name       Page Address");
-  fprintf(fout, "//	----------------  ------------");
+  fprintf(fout, "//\tSymbol Name       Page Address\n");
+  fprintf(fout, "//\t----------------  ------------\n");
+  int i;
+  for (i = 0; i < p->num_symbols; i++)
+    fprintf(fout, "//\t%-16s  %X\n", p->symbols[i].name,
+            p->symbols[i].addr + p->start_addr - 1);
 
+  fclose(fout);
   return 0;
 }

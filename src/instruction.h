@@ -1,5 +1,5 @@
 /**
- * instruction.c - CPU and ALU simulator.
+ * instruction.h - CPU and ALU simulator.
  * TCSS 371, Spring 2016
  * Final Project
  * Viveret Steele (viveret@uw.edu)
