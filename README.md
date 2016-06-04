@@ -13,54 +13,6 @@ Teamwork
 
 You are working in pairs but may divide the work as you think necessary. Make sure, however, that you are in constant communication, especially as regards the interfaces between partners' work when it comes time to integrate. You don't want any last minute surprises!
 
-Instructions
-------------
-- [ ] ADD
-- [ ] ADD(i)
-- [ ] AND
-- [ ] AND(i)
-- [ ] BR
-- [ ] JMP
-- [ ] JSR
-- [ ] LD
-- [ ] LEA
-- [ ] NOT
-- [ ] RET
-- [ ] ST
-- [ ] TRAP
-
-Extra credit:
--------------
-- [ ] LDR
-- [ ] STR
-- [ ] LDI
-- [ ] STI
-
-Other Details
--------------
-The first set of instructions should allow your simulator to run interesting programs.
-
-In addition to the instructions, you will need to implement simulations of several of the TRAP routines as described in Appendix A.
-- [ ] GETC
-- [ ] OUT
-- [ ] PUTS
-- [ ] HALT
-
-Additional Implementations
-==========================
-Input/Output
-------------
-The monitor screen should be modified to allow a few lines at the bottom of the screen where the simulator can get characters and print to the screen so that the trap functions can perform input and output.
-
-Loading an Object File
-----------------------
-You will need to write a routine that loads an object program from disk to your main memory. We will cover the file format and how to go about this in class.
-
-Assembly Program
-----------------
-In class we will be developing a test program in assembly language that should be capable of running on both the book simulator and your simulator. You will also develop your own program (I will provide a list of program requirements from which you can choose which one to implement).
-
-Turn In
-=======
-* Source code files
-* Screen shots of running program - 3 shots at different stages of the run of the two machine program
+Screenshots
+-----------
+They are in /doc/
